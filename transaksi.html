@@ -79,7 +79,7 @@
     </div>
 
     <script>
-        // Function to display transaksi data
+        // Function to display transaksi data with pelanggan info
         function displayTransaksi() {
             const transaksiTable = document.getElementById('transaksiTable').getElementsByTagName('tbody')[0];
             const transaksi = JSON.parse(localStorage.getItem('transaksi')) || [];
@@ -87,16 +87,16 @@
 
             transaksiTable.innerHTML = '';
             transaksi.forEach(t => {
-                // Find the customer associated with the transaction
-                const pelangganData = pelanggan.find(p => p.id === t.pelangganId);
-                const peranPelanggan = pelangganData ? pelangganData.peran : 'Tidak Diketahui';
-
                 const row = transaksiTable.insertRow();
+                
+                // Find the pelanggan based on ID
+                const pelangganData = pelanggan.find(p => p.id === t.pelangganId);
+
                 row.innerHTML = `
                     <td>${t.id}</td>
                     <td>${t.pelangganId}</td>
-                    <td>${pelangganData ? pelangganData.nama : 'Tidak Diketahui'}</td>
-                    <td>${peranPelanggan}</td>
+                    <td>${pelangganData ? pelangganData.nama : 'Tidak Ditemukan'}</td>
+                    <td>${pelangganData ? pelangganData.peran : 'Tidak Diketahui'}</td>
                     <td>${t.totalHarga}</td>
                     <td>${t.tanggal}</td>
                     <td>${t.statusPembayaran || 'Belum Dibayar'}</td>
@@ -121,44 +121,6 @@
                 document.getElementById('kembalian').value = 0;
             }
         }
-
-        // Function to calculate kembalian
-        document.getElementById('jumlahBayar').addEventListener('input', function () {
-            const jumlahBayar = parseFloat(this.value);
-            const totalHarga = parseFloat(document.getElementById('jumlahBayar').value);
-
-            if (jumlahBayar >= totalHarga) {
-                const kembalian = jumlahBayar - totalHarga;
-                document.getElementById('kembalian').value = kembalian.toFixed(2);
-            } else {
-                document.getElementById('kembalian').value = 0;
-            }
-        });
-
-        // Event listener for pembayaran form
-        document.getElementById('pembayaranForm').addEventListener('submit', function (event) {
-            event.preventDefault();
-
-            const transaksiId = document.getElementById('transaksiId').value;
-            const metodePembayaran = document.getElementById('metodePembayaran').value;
-            const jumlahBayar = parseFloat(document.getElementById('jumlahBayar').value);
-            const kembalian = parseFloat(document.getElementById('kembalian').value);
-
-            const transaksi = JSON.parse(localStorage.getItem('transaksi')) || [];
-            const transaksiIndex = transaksi.findIndex(t => t.id === transaksiId);
-
-            if (transaksiIndex !== -1) {
-                transaksi[transaksiIndex].statusPembayaran = 'Dibayar';
-                transaksi[transaksiIndex].metodePembayaran = metodePembayaran;
-                transaksi[transaksiIndex].jumlahBayar = jumlahBayar;
-                transaksi[transaksiIndex].kembalian = kembalian;
-                localStorage.setItem('transaksi', JSON.stringify(transaksi));
-            }
-
-            displayTransaksi();
-            document.getElementById('pembayaranForm').reset();
-            $('#bayarModal').modal('hide');
-        });
 
         // Initialize page data
         displayTransaksi();
