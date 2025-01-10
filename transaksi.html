@@ -38,6 +38,23 @@
                         </tr>
                     </tbody>
                 </table>
+
+                <!-- Diskon -->
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label for="potonganHarga" class="form-label">Potongan Harga (Nominal)</label>
+                        <input type="number" class="form-control" id="potonganHarga" value="0">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="diskonPersen" class="form-label">Diskon (%)</label>
+                        <input type="number" class="form-control" id="diskonPersen" value="0" min="0" max="100">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="totalHarga" class="form-label">Total Harga</label>
+                        <input type="text" class="form-control" id="totalHarga" disabled>
+                    </div>
+                </div>
+
                 <button class="btn btn-success" id="checkoutBtn" style="display: none;">Checkout</button>
             </div>
 
@@ -102,19 +119,72 @@
         let transaksiList = JSON.parse(localStorage.getItem('transaksi')) || [];
         let keranjang = [];
 
-        // Tampilkan daftar pelanggan dan produk
-        function populateOptions() {
-            const pelangganSelect = document.getElementById('pelangganId');
-            const produkSelect = document.getElementById('produkId');
+        function updateTotalHarga() {
+            const potonganHarga = parseFloat(document.getElementById('potonganHarga').value) || 0;
+            const diskonPersen = parseFloat(document.getElementById('diskonPersen').value) || 0;
 
-            pelangganSelect.innerHTML = pelangganList.map(p =>
-                `<option value="${p.id}">${p.nama} (${p.peran})</option>`).join('');
+            const totalHarga = keranjang.reduce((total, item) => total + (item.jumlah * item.hargaSatuan), 0);
+            const totalDiskon = totalHarga - potonganHarga - (totalHarga * diskonPersen / 100);
 
-            produkSelect.innerHTML = produkList.map(p =>
-                `<option value="${p.id}">${p.nama} - Stok: ${p.stok}</option>`).join('');
+            document.getElementById('totalHarga').value = totalDiskon > 0 ? totalDiskon.toFixed(2) : 0;
         }
 
-        // Tampilkan keranjang
+        document.getElementById('potonganHarga').addEventListener('input', updateTotalHarga);
+        document.getElementById('diskonPersen').addEventListener('input', updateTotalHarga);
+
+        // Tambah produk ke keranjang
+        document.getElementById('transaksiForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const produkId = document.getElementById('produkId').value;
+            const jumlah = parseInt(document.getElementById('jumlah').value);
+
+            const produk = produkList.find(p => p.id === produkId);
+
+            if (produk && produk.stok >= jumlah) {
+                keranjang.push({
+                    idProduk: produk.id,
+                    namaProduk: produk.nama,
+                    hargaSatuan: produk.harga,
+                    jumlah,
+                });
+
+                produk.stok -= jumlah;
+                localStorage.setItem('produk', JSON.stringify(produkList));
+
+                displayKeranjang();
+                alert('Produk berhasil ditambahkan ke keranjang!');
+            } else {
+                alert('Stok tidak mencukupi!');
+            }
+        });
+
+        // Checkout dan alihkan ke metode pembayaran
+        document.getElementById('checkoutBtn').addEventListener('click', function() {
+            const pelangganId = document.getElementById('pelangganId').value;
+            const pelanggan = pelangganList.find(p => p.id === pelangganId);
+            const totalHarga = parseFloat(document.getElementById('totalHarga').value);
+
+            if (!pelanggan) {
+                alert('Pilih pelanggan terlebih dahulu!');
+                return;
+            }
+
+            const transaksi = {
+                id: `TRX-${Date.now()}`,
+                namaPelanggan: pelanggan.nama,
+                peranPelanggan: pelanggan.peran,
+                totalHarga,
+                status: 'Belum Dibayar',
+            };
+
+            transaksiList.push(transaksi);
+            localStorage.setItem('transaksi', JSON.stringify(transaksiList));
+
+            keranjang = [];
+            alert('Checkout berhasil! Arahkan ke metode pembayaran.');
+            window.location.href = 'metode_pembayaran.html'; // Redirect ke halaman pembayaran
+        });
+
         function displayKeranjang() {
             const tableBody = document.getElementById('keranjangTable').getElementsByTagName('tbody')[0];
             tableBody.innerHTML = '';
@@ -141,107 +211,11 @@
                 });
                 document.getElementById('checkoutBtn').style.display = 'block';
             }
+
+            updateTotalHarga();
         }
 
-        // Tambah ke keranjang
-        document.getElementById('transaksiForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const produkId = document.getElementById('produkId').value;
-            const jumlah = parseInt(document.getElementById('jumlah').value);
-
-            const produk = produkList.find(p => p.id === produkId);
-
-            if (produk && produk.stok >= jumlah) {
-                keranjang.push({
-                    idProduk: produk.id,
-                    namaProduk: produk.nama,
-                    hargaSatuan: produk.harga,
-                    jumlah,
-                });
-
-                produk.stok -= jumlah;
-                localStorage.setItem('produk', JSON.stringify(produkList));
-
-                displayKeranjang();
-                populateOptions();
-                alert('Produk berhasil ditambahkan ke keranjang!');
-            } else {
-                alert('Stok tidak mencukupi!');
-            }
-        });
-
-        // Hapus dari keranjang
-        function hapusDariKeranjang(index) {
-            const item = keranjang[index];
-            const produk = produkList.find(p => p.id === item.idProduk);
-
-            if (produk) {
-                produk.stok += item.jumlah;
-                localStorage.setItem('produk', JSON.stringify(produkList));
-            }
-
-            keranjang.splice(index, 1);
-            displayKeranjang();
-            populateOptions();
-        }
-
-        // Checkout keranjang
-        document.getElementById('checkoutBtn').addEventListener('click', function() {
-            const pelangganId = document.getElementById('pelangganId').value;
-            const pelanggan = pelangganList.find(p => p.id === pelangganId);
-
-            if (!pelanggan) {
-                alert('Pilih pelanggan terlebih dahulu!');
-                return;
-            }
-
-            const totalHarga = keranjang.reduce((total, item) => total + item.jumlah * item.hargaSatuan, 0);
-
-            const transaksi = {
-                id: `TRX-${Date.now()}`,
-                namaPelanggan: pelanggan.nama,
-                peranPelanggan: pelanggan.peran,
-                totalHarga,
-                status: 'Belum Dibayar',
-                keranjang: [...keranjang],
-            };
-
-            transaksiList.push(transaksi);
-            localStorage.setItem('transaksi', JSON.stringify(transaksiList));
-
-            keranjang = [];
-            displayKeranjang();
-            displayTransaksi();
-            alert('Transaksi berhasil dibuat!');
-        });
-
-        // Tampilkan daftar transaksi
-        function displayTransaksi() {
-            const tableBody = document.getElementById('transaksiTable').getElementsByTagName('tbody')[0];
-            tableBody.innerHTML = '';
-
-            transaksiList.forEach(t => {
-                const row = `
-                    <tr>
-                        <td>${t.id}</td>
-                        <td>${t.namaPelanggan}</td>
-                        <td>${t.peranPelanggan}</td>
-                        <td>${t.totalHarga}</td>
-                        <td>${t.status}</td>
-                        <td>
-                            ${t.status === 'Belum Dibayar' ? 
-                                `<button class="btn btn-success">Bayar</button>` : 
-                                '<span class="badge bg-success">Sudah Dibayar</span>'}
-                        </td>
-                    </tr>
-                `;
-                tableBody.innerHTML += row;
-            });
-        }
-
-        populateOptions();
         displayKeranjang();
-        displayTransaksi();
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
