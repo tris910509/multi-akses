@@ -80,6 +80,10 @@
                             <!-- Data keranjang akan diisi di sini -->
                         </tbody>
                     </table>
+
+                    <div id="keranjangAlert" class="alert alert-warning" style="display: none;">
+                        Keranjang kosong! Tambahkan produk untuk melanjutkan.
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
@@ -142,6 +146,7 @@
             const keranjangTable = document.getElementById('keranjangTable');
             keranjangTable.innerHTML = '';
 
+            let totalHarga = 0;
             keranjang.forEach((item, index) => {
                 const produk = produkList.find(p => p.id === item.produkId);
                 const row = document.createElement('tr');
@@ -153,8 +158,11 @@
                     <td><button class="btn btn-danger" onclick="hapusKeranjang(${index})">Hapus</button></td>
                 `;
                 keranjangTable.appendChild(row);
+                totalHarga += produk.harga * item.jumlah;
             });
 
+            document.getElementById('totalHargaKeranjang').textContent = totalHarga;
+            document.getElementById('keranjangAlert').style.display = keranjang.length === 0 ? 'block' : 'none';
             document.getElementById('simpanTransaksi').disabled = keranjang.length === 0;
         }
 
@@ -192,13 +200,45 @@
 
             const produkId = document.getElementById('produkId').value;
             const jumlah = parseInt(document.getElementById('jumlahProduk').value);
+
+            // Validasi stok produk
+            const produk = produkList.find(p => p.id === produkId);
+            if (produk.stok < jumlah) {
+                alert('Stok tidak mencukupi!');
+                return;
+            }
+
             keranjang.push({ produkId, jumlah });
             displayKeranjang();
         });
 
         document.getElementById('konfirmasiBayar').addEventListener('click', function () {
-            // Logic pembayaran di sini
+            const totalHarga = keranjang.reduce((acc, item) => {
+                const produk = produkList.find(p => p.id === item.produkId);
+                return acc + produk.harga * item.jumlah;
+            }, 0);
+
+            const transaksi = {
+                id: Date.now(),
+                namaPelanggan: pelangganList.find(p => p.id === document.getElementById('pelangganId').value).nama,
+                totalHarga,
+                statusPembayaran: 'Belum Dibayar'
+            };
+
+            transaksiList.push(transaksi);
+            localStorage.setItem('transaksi', JSON.stringify(transaksiList));
+
+            // Update stok produk
+            keranjang.forEach(item => {
+                const produk = produkList.find(p => p.id === item.produkId);
+                produk.stok -= item.jumlah;
+            });
+            localStorage.setItem('produk', JSON.stringify(produkList));
+
+            keranjang = [];
+            displayTransaksi();
             alert('Pembayaran berhasil!');
+            document.getElementById('bayarModal').style.display = 'none';
         });
 
         populateSelectOptions();
