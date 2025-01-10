@@ -5,25 +5,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pelanggan Management</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet"> <!-- Font Awesome for Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
 </head>
 <body>
     <div class="container">
         <nav class="navbar navbar-expand-lg navbar-light bg-light">
             <a class="navbar-brand" href="home.html">Home</a>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto" id="navbarItems"></ul>
+                <ul class="navbar-nav ms-auto"></ul>
             </div>
         </nav>
 
         <div class="my-5">
             <h1>Pelanggan Management</h1>
-            <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addPelangganModal"><i class="fas fa-user-plus"></i> Add Pelanggan</button>
+            <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addPelangganModal">
+                <i class="fas fa-plus-circle"></i> Add Pelanggan
+            </button>
 
             <table class="table table-striped" id="pelangganTable">
                 <thead>
                     <tr>
-                        <th scope="col">ID</th>
+                        <th scope="col">ID Pelanggan</th>
                         <th scope="col">Nama</th>
                         <th scope="col">Jenis Kelamin</th>
                         <th scope="col">No Handphone</th>
@@ -32,7 +34,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <!-- Data pelanggan akan ditambahkan di sini -->
+                    <!-- Data pelanggan akan ditampilkan di sini -->
                 </tbody>
             </table>
         </div>
@@ -49,19 +51,19 @@
                 <div class="modal-body">
                     <form id="addPelangganForm">
                         <div class="mb-3">
-                            <label for="newNama" class="form-label">Nama</label>
-                            <input type="text" class="form-control" id="newNama" required>
+                            <label for="newNamaPelanggan" class="form-label">Nama Pelanggan</label>
+                            <input type="text" class="form-control" id="newNamaPelanggan" required>
                         </div>
                         <div class="mb-3">
                             <label for="newJenisKelamin" class="form-label">Jenis Kelamin</label>
-                            <select class="form-select" id="newJenisKelamin">
-                                <option value="Laki-Laki">Laki-Laki</option>
+                            <select class="form-select" id="newJenisKelamin" required>
+                                <option value="Laki-laki">Laki-laki</option>
                                 <option value="Perempuan">Perempuan</option>
                             </select>
                         </div>
                         <div class="mb-3">
                             <label for="newNoHandphone" class="form-label">No Handphone</label>
-                            <input type="text" class="form-control" id="newNoHandphone" required>
+                            <input type="tel" class="form-control" id="newNoHandphone" required>
                         </div>
                         <div class="mb-3">
                             <label for="newAlamat" class="form-label">Alamat</label>
@@ -86,19 +88,19 @@
                     <form id="editPelangganForm">
                         <input type="hidden" id="editPelangganId">
                         <div class="mb-3">
-                            <label for="editNama" class="form-label">Nama</label>
-                            <input type="text" class="form-control" id="editNama" required>
+                            <label for="editNamaPelanggan" class="form-label">Nama Pelanggan</label>
+                            <input type="text" class="form-control" id="editNamaPelanggan" required>
                         </div>
                         <div class="mb-3">
                             <label for="editJenisKelamin" class="form-label">Jenis Kelamin</label>
-                            <select class="form-select" id="editJenisKelamin">
-                                <option value="Laki-Laki">Laki-Laki</option>
+                            <select class="form-select" id="editJenisKelamin" required>
+                                <option value="Laki-laki">Laki-laki</option>
                                 <option value="Perempuan">Perempuan</option>
                             </select>
                         </div>
                         <div class="mb-3">
                             <label for="editNoHandphone" class="form-label">No Handphone</label>
-                            <input type="text" class="form-control" id="editNoHandphone" required>
+                            <input type="tel" class="form-control" id="editNoHandphone" required>
                         </div>
                         <div class="mb-3">
                             <label for="editAlamat" class="form-label">Alamat</label>
@@ -112,106 +114,87 @@
     </div>
 
     <script>
-        // Cek apakah pengguna sudah login dan peran pengguna
-        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-        if (!currentUser || !currentUser.isLoggedIn || currentUser.role !== 'admin') {
-            window.location.href = 'home.html'; // Akses hanya untuk admin
-        }
-
-        // Menampilkan daftar pelanggan
         function displayPelanggan() {
             const pelangganTable = document.getElementById('pelangganTable').getElementsByTagName('tbody')[0];
             const pelanggan = JSON.parse(localStorage.getItem('pelanggan')) || [];
 
-            pelangganTable.innerHTML = ''; // Kosongkan tabel
-            pelanggan.forEach((pelangganData, index) => {
+            pelangganTable.innerHTML = '';
+            pelanggan.forEach(p => {
                 const row = pelangganTable.insertRow();
                 row.innerHTML = `
-                    <td>${pelangganData.id}</td>
-                    <td>${pelangganData.nama}</td>
-                    <td>${pelangganData.jenisKelamin}</td>
-                    <td>${pelangganData.noHandphone}</td>
-                    <td>${pelangganData.alamat}</td>
+                    <td>${p.id}</td>
+                    <td>${p.nama}</td>
+                    <td>${p.jenisKelamin}</td>
+                    <td>${p.noHandphone}</td>
+                    <td>${p.alamat}</td>
                     <td>
-                        <button class="btn btn-info btn-sm" onclick="editPelanggan(${index})"><i class="fas fa-edit"></i> Edit</button>
-                        <button class="btn btn-danger btn-sm" onclick="deletePelanggan(${index})"><i class="fas fa-trash-alt"></i> Delete</button>
+                        <button class="btn btn-warning btn-sm" onclick="editPelanggan('${p.id}')"><i class="fas fa-edit"></i> Edit</button>
+                        <button class="btn btn-danger btn-sm" onclick="deletePelanggan('${p.id}')"><i class="fas fa-trash-alt"></i> Delete</button>
                     </td>
                 `;
             });
         }
 
-        // Menambah pelanggan baru dengan ID unik berdasarkan timestamp dan tambahan angka acak
-        function generateUniqueId() {
-            const timestamp = Date.now();
-            const randomNum = Math.floor(Math.random() * 1000); // Angka acak untuk menghindari bentrok dalam milidetik yang sama
-            return timestamp.toString() + randomNum.toString();
-        }
-
-        // Menambah pelanggan baru
-        document.getElementById('addPelangganForm').addEventListener('submit', function(event) {
+        document.getElementById('addPelangganForm').addEventListener('submit', function (event) {
             event.preventDefault();
 
-            const nama = document.getElementById('newNama').value;
+            const nama = document.getElementById('newNamaPelanggan').value;
             const jenisKelamin = document.getElementById('newJenisKelamin').value;
             const noHandphone = document.getElementById('newNoHandphone').value;
             const alamat = document.getElementById('newAlamat').value;
-
-            // Membuat ID unik dengan timestamp dan angka acak
-            const pelangganId = generateUniqueId();
+            const pelangganId = `PLG-${Date.now()}`;
 
             const pelanggan = JSON.parse(localStorage.getItem('pelanggan')) || [];
             pelanggan.push({ id: pelangganId, nama, jenisKelamin, noHandphone, alamat });
             localStorage.setItem('pelanggan', JSON.stringify(pelanggan));
 
-            displayPelanggan(); // Update tabel setelah menambah pelanggan
-            $('#addPelangganModal').modal('hide'); // Menutup modal
+            displayPelanggan();
+            document.getElementById('addPelangganForm').reset();
+            $('#addPelangganModal').modal('hide');
         });
 
-        // Menghapus pelanggan
-        function deletePelanggan(index) {
-            const pelanggan = JSON.parse(localStorage.getItem('pelanggan')) || [];
-            pelanggan.splice(index, 1);
+        function deletePelanggan(id) {
+            let pelanggan = JSON.parse(localStorage.getItem('pelanggan')) || [];
+            pelanggan = pelanggan.filter(p => p.id !== id);
             localStorage.setItem('pelanggan', JSON.stringify(pelanggan));
-            displayPelanggan(); // Update tabel setelah menghapus pelanggan
+
+            displayPelanggan();
         }
 
-        // Menampilkan data pelanggan yang akan diedit
-        function editPelanggan(index) {
+        function editPelanggan(id) {
             const pelanggan = JSON.parse(localStorage.getItem('pelanggan')) || [];
-            const pelangganData = pelanggan[index];
+            const p = pelanggan.find(p => p.id === id);
 
-            // Isi form dengan data pelanggan
-            document.getElementById('editPelangganId').value = pelangganData.id;
-            document.getElementById('editNama').value = pelangganData.nama;
-            document.getElementById('editJenisKelamin').value = pelangganData.jenisKelamin;
-            document.getElementById('editNoHandphone').value = pelangganData.noHandphone;
-            document.getElementById('editAlamat').value = pelangganData.alamat;
-
-            // Tampilkan modal
-            $('#editPelangganModal').modal('show');
+            if (p) {
+                document.getElementById('editPelangganId').value = p.id;
+                document.getElementById('editNamaPelanggan').value = p.nama;
+                document.getElementById('editJenisKelamin').value = p.jenisKelamin;
+                document.getElementById('editNoHandphone').value = p.noHandphone;
+                document.getElementById('editAlamat').value = p.alamat;
+                $('#editPelangganModal').modal('show');
+            }
         }
 
-        // Menyimpan perubahan setelah mengedit pelanggan
-        document.getElementById('editPelangganForm').addEventListener('submit', function(event) {
+        document.getElementById('editPelangganForm').addEventListener('submit', function (event) {
             event.preventDefault();
 
-            const id = document.getElementById('editPelangganId').value;
-            const nama = document.getElementById('editNama').value;
+            const pelangganId = document.getElementById('editPelangganId').value;
+            const nama = document.getElementById('editNamaPelanggan').value;
             const jenisKelamin = document.getElementById('editJenisKelamin').value;
             const noHandphone = document.getElementById('editNoHandphone').value;
             const alamat = document.getElementById('editAlamat').value;
 
             const pelanggan = JSON.parse(localStorage.getItem('pelanggan')) || [];
-            const pelangganIndex = pelanggan.findIndex(p => p.id == id);
-            pelanggan[pelangganIndex] = { id, nama, jenisKelamin, noHandphone, alamat }; // Update data pelanggan
+            const pelangganIndex = pelanggan.findIndex(p => p.id === pelangganId);
 
-            localStorage.setItem('pelanggan', JSON.stringify(pelanggan));
-            displayPelanggan(); // Update tabel setelah edit
-
-            $('#editPelangganModal').modal('hide'); // Menutup modal
+            if (pelangganIndex !== -1) {
+                pelanggan[pelangganIndex] = { id: pelangganId, nama, jenisKelamin, noHandphone, alamat };
+                localStorage.setItem('pelanggan', JSON.stringify(pelanggan));
+                displayPelanggan();
+                $('#editPelangganModal').modal('hide');
+            }
         });
 
-        // Tampilkan daftar pelanggan saat halaman dimuat
         displayPelanggan();
     </script>
 
