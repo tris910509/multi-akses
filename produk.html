@@ -31,6 +31,7 @@
                         <th scope="col">Item</th>
                         <th scope="col">Supplier</th>
                         <th scope="col">Harga</th>
+                        <th scope="col">Stok</th>
                         <th scope="col">Actions</th>
                     </tr>
                 </thead>
@@ -71,6 +72,10 @@
                             <label for="newHarga" class="form-label">Harga</label>
                             <input type="number" class="form-control" id="newHarga" required>
                         </div>
+                        <div class="mb-3">
+                            <label for="newStok" class="form-label">Stok</label>
+                            <input type="number" class="form-control" id="newStok" required>
+                        </div>
                         <button type="submit" class="btn btn-primary">Add Produk</button>
                     </form>
                 </div>
@@ -78,69 +83,21 @@
         </div>
     </div>
 
-    <!-- Modal Edit Produk -->
-    <div class="modal fade" id="editProdukModal" tabindex="-1" aria-labelledby="editProdukModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="editProdukModalLabel">Edit Produk</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="editProdukForm">
-                        <input type="hidden" id="editProdukId">
-                        <div class="mb-3">
-                            <label for="editNamaProduk" class="form-label">Nama Produk</label>
-                            <input type="text" class="form-control" id="editNamaProduk" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="editKategori" class="form-label">Kategori</label>
-                            <select class="form-select" id="editKategori" required></select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="editItem" class="form-label">Item</label>
-                            <select class="form-select" id="editItem" required></select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="editSupplier" class="form-label">Supplier</label>
-                            <select class="form-select" id="editSupplier" required></select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="editHarga" class="form-label">Harga</label>
-                            <input type="number" class="form-control" id="editHarga" required>
-                        </div>
-                        <button type="submit" class="btn btn-primary">Update Produk</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <script>
-        // Load options for Kategori, Item, and Supplier
         function loadOptions() {
             const kategori = JSON.parse(localStorage.getItem('kategori')) || [];
             const items = JSON.parse(localStorage.getItem('items')) || [];
             const suppliers = JSON.parse(localStorage.getItem('suppliers')) || [];
 
-            const kategoriSelects = [document.getElementById('newKategori'), document.getElementById('editKategori')];
-            const itemSelects = [document.getElementById('newItem'), document.getElementById('editItem')];
-            const supplierSelects = [document.getElementById('newSupplier'), document.getElementById('editSupplier')];
+            const kategoriSelect = document.getElementById('newKategori');
+            const itemSelect = document.getElementById('newItem');
+            const supplierSelect = document.getElementById('newSupplier');
 
-            kategoriSelects.forEach(select => {
-                select.innerHTML = kategori.map(k => `<option value="${k.id}">${k.nama}</option>`).join('');
-            });
-
-            itemSelects.forEach(select => {
-                select.innerHTML = items.map(i => `<option value="${i.id}">${i.nama}</option>`).join('');
-            });
-
-            supplierSelects.forEach(select => {
-                select.innerHTML = suppliers.map(s => `<option value="${s.id}">${s.nama}</option>`).join('');
-            });
+            kategoriSelect.innerHTML = kategori.map(k => `<option value="${k.id}">${k.nama}</option>`).join('');
+            itemSelect.innerHTML = items.map(i => `<option value="${i.id}">${i.nama}</option>`).join('');
+            supplierSelect.innerHTML = suppliers.map(s => `<option value="${s.id}">${s.nama}</option>`).join('');
         }
 
-        // Display Produk
         function displayProduk() {
             const produkTable = document.getElementById('produkTable').getElementsByTagName('tbody')[0];
             const produk = JSON.parse(localStorage.getItem('produk')) || [];
@@ -155,15 +112,14 @@
                     <td>${item.itemNama}</td>
                     <td>${item.supplierNama}</td>
                     <td>${item.harga}</td>
+                    <td>${item.stok}</td>
                     <td>
-                        <button class="btn btn-info btn-sm" onclick="editProduk('${item.id}')"><i class="fas fa-edit"></i> Edit</button>
                         <button class="btn btn-danger btn-sm" onclick="deleteProduk('${item.id}')"><i class="fas fa-trash-alt"></i> Delete</button>
                     </td>
                 `;
             });
         }
 
-        // Add Produk
         document.getElementById('addProdukForm').addEventListener('submit', function (event) {
             event.preventDefault();
 
@@ -175,10 +131,11 @@
             const supplierId = document.getElementById('newSupplier').value;
             const supplierNama = document.getElementById('newSupplier').selectedOptions[0].text;
             const harga = document.getElementById('newHarga').value;
+            const stok = parseInt(document.getElementById('newStok').value);
             const produkId = `PRD-${Date.now()}`;
 
             const produk = JSON.parse(localStorage.getItem('produk')) || [];
-            produk.push({ id: produkId, nama, kategoriId, kategoriNama, itemId, itemNama, supplierId, supplierNama, harga });
+            produk.push({ id: produkId, nama, kategoriId, kategoriNama, itemId, itemNama, supplierId, supplierNama, harga, stok });
             localStorage.setItem('produk', JSON.stringify(produk));
 
             displayProduk();
@@ -186,47 +143,6 @@
             $('#addProdukModal').modal('hide');
         });
 
-        // Edit Produk
-        function editProduk(id) {
-            const produk = JSON.parse(localStorage.getItem('produk')) || [];
-            const item = produk.find(p => p.id === id);
-
-            document.getElementById('editProdukId').value = item.id;
-            document.getElementById('editNamaProduk').value = item.nama;
-            document.getElementById('editKategori').value = item.kategoriId;
-            document.getElementById('editItem').value = item.itemId;
-            document.getElementById('editSupplier').value = item.supplierId;
-            document.getElementById('editHarga').value = item.harga;
-
-            $('#editProdukModal').modal('show');
-        }
-
-        // Update Produk
-        document.getElementById('editProdukForm').addEventListener('submit', function (event) {
-            event.preventDefault();
-
-            const id = document.getElementById('editProdukId').value;
-            const nama = document.getElementById('editNamaProduk').value;
-            const kategoriId = document.getElementById('editKategori').value;
-            const kategoriNama = document.getElementById('editKategori').selectedOptions[0].text;
-            const itemId = document.getElementById('editItem').value;
-            const itemNama = document.getElementById('editItem').selectedOptions[0].text;
-            const supplierId = document.getElementById('editSupplier').value;
-            const supplierNama = document.getElementById('editSupplier').selectedOptions[0].text;
-            const harga = document.getElementById('editHarga').value;
-
-            let produk = JSON.parse(localStorage.getItem('produk')) || [];
-            const produkIndex = produk.findIndex(p => p.id === id);
-
-            produk[produkIndex] = { id, nama, kategoriId, kategoriNama, itemId, itemNama, supplierId, supplierNama, harga };
-            localStorage.setItem('produk', JSON.stringify(produk));
-
-            displayProduk();
-            document.getElementById('editProdukForm').reset();
-            $('#editProdukModal').modal('hide');
-        });
-
-        // Delete Produk
         function deleteProduk(id) {
             let produk = JSON.parse(localStorage.getItem('produk')) || [];
             produk = produk.filter(p => p.id !== id);
@@ -235,7 +151,19 @@
             displayProduk();
         }
 
-        // Initialize Data
+        function reduceStock(id, jumlah) {
+            let produk = JSON.parse(localStorage.getItem('produk')) || [];
+            const produkIndex = produk.findIndex(p => p.id === id);
+
+            if (produkIndex !== -1) {
+                produk[produkIndex].stok -= jumlah;
+                localStorage.setItem('produk', JSON.stringify(produk));
+                displayProduk();
+            } else {
+                alert("Produk tidak ditemukan!");
+            }
+        }
+
         loadOptions();
         displayProduk();
     </script>
