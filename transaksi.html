@@ -1,1 +1,170 @@
-transaksi.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transaksi</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <a class="navbar-brand" href="home.html">Home</a>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto"></ul>
+            </div>
+        </nav>
+
+        <div class="my-5">
+            <h1>Transaksi</h1>
+            <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addTransaksiModal">
+                <i class="fas fa-plus-circle"></i> Add Transaksi
+            </button>
+
+            <table class="table table-striped" id="transaksiTable">
+                <thead>
+                    <tr>
+                        <th scope="col">ID Transaksi</th>
+                        <th scope="col">ID Pelanggan</th>
+                        <th scope="col">Nama Produk</th>
+                        <th scope="col">Jumlah</th>
+                        <th scope="col">Total Harga</th>
+                        <th scope="col">Tanggal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Data transaksi akan ditampilkan di sini -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal Add Transaksi -->
+    <div class="modal fade" id="addTransaksiModal" tabindex="-1" aria-labelledby="addTransaksiModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addTransaksiModalLabel">Add New Transaksi</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addTransaksiForm">
+                        <div class="mb-3">
+                            <label for="newPelangganId" class="form-label">Pelanggan</label>
+                            <select class="form-select" id="newPelangganId" required>
+                                <!-- Data pelanggan akan dimasukkan di sini -->
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="newProdukId" class="form-label">Produk</label>
+                            <select class="form-select" id="newProdukId" required>
+                                <!-- Data produk akan dimasukkan di sini -->
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="newJumlah" class="form-label">Jumlah</label>
+                            <input type="number" class="form-control" id="newJumlah" required min="1">
+                        </div>
+                        <div class="mb-3">
+                            <label for="newTotalHarga" class="form-label">Total Harga</label>
+                            <input type="number" class="form-control" id="newTotalHarga" readonly>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Add Transaksi</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Function to display transaksi data
+        function displayTransaksi() {
+            const transaksiTable = document.getElementById('transaksiTable').getElementsByTagName('tbody')[0];
+            const transaksi = JSON.parse(localStorage.getItem('transaksi')) || [];
+
+            transaksiTable.innerHTML = '';
+            transaksi.forEach(t => {
+                const row = transaksiTable.insertRow();
+                row.innerHTML = `
+                    <td>${t.id}</td>
+                    <td>${t.pelangganId}</td>
+                    <td>${t.produkId}</td>
+                    <td>${t.jumlah}</td>
+                    <td>${t.totalHarga}</td>
+                    <td>${t.tanggal}</td>
+                `;
+            });
+        }
+
+        // Function to calculate the total price
+        function calculateTotalHarga(jumlah, produkId) {
+            const produk = JSON.parse(localStorage.getItem('produk')) || [];
+            const selectedProduk = produk.find(p => p.id === produkId);
+            return selectedProduk ? selectedProduk.harga * jumlah : 0;
+        }
+
+        // Function to load data for pelanggan and produk
+        function loadPelangganAndProduk() {
+            const pelangganSelect = document.getElementById('newPelangganId');
+            const produkSelect = document.getElementById('newProdukId');
+            const pelanggan = JSON.parse(localStorage.getItem('pelanggan')) || [];
+            const produk = JSON.parse(localStorage.getItem('produk')) || [];
+
+            pelangganSelect.innerHTML = '';
+            produkSelect.innerHTML = '';
+
+            // Insert pelanggan options
+            pelanggan.forEach(p => {
+                const option = document.createElement('option');
+                option.value = p.id;
+                option.textContent = p.nama;
+                pelangganSelect.appendChild(option);
+            });
+
+            // Insert produk options
+            produk.forEach(p => {
+                const option = document.createElement('option');
+                option.value = p.id;
+                option.textContent = p.nama;
+                produkSelect.appendChild(option);
+            });
+        }
+
+        // Event listener for form submission to add transaksi
+        document.getElementById('addTransaksiForm').addEventListener('submit', function (event) {
+            event.preventDefault();
+
+            const pelangganId = document.getElementById('newPelangganId').value;
+            const produkId = document.getElementById('newProdukId').value;
+            const jumlah = parseInt(document.getElementById('newJumlah').value);
+            const totalHarga = calculateTotalHarga(jumlah, produkId);
+            const transaksiId = `TRX-${Date.now()}`;
+            const tanggal = new Date().toLocaleString();
+
+            const transaksi = JSON.parse(localStorage.getItem('transaksi')) || [];
+            transaksi.push({ id: transaksiId, pelangganId, produkId, jumlah, totalHarga, tanggal });
+            localStorage.setItem('transaksi', JSON.stringify(transaksi));
+
+            // Update stok produk
+            const produk = JSON.parse(localStorage.getItem('produk')) || [];
+            const produkIndex = produk.findIndex(p => p.id === produkId);
+            if (produkIndex !== -1) {
+                produk[produkIndex].stok -= jumlah;
+                localStorage.setItem('produk', JSON.stringify(produk));
+            }
+
+            displayTransaksi();
+            document.getElementById('addTransaksiForm').reset();
+            $('#addTransaksiModal').modal('hide');
+        });
+
+        // Initialize page data
+        loadPelangganAndProduk();
+        displayTransaksi();
+
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
