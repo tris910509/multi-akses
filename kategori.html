@@ -1,1 +1,176 @@
-kategori.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kategori Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet"> <!-- Font Awesome for Icons -->
+</head>
+<body>
+    <div class="container">
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <a class="navbar-brand" href="home.html">Home</a>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto" id="navbarItems"></ul>
+            </div>
+        </nav>
+
+        <div class="my-5">
+            <h1>Kategori Management</h1>
+            <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addKategoriModal"><i class="fas fa-plus-circle"></i> Add Kategori</button>
+
+            <table class="table table-striped" id="kategoriTable">
+                <thead>
+                    <tr>
+                        <th scope="col">ID</th>
+                        <th scope="col">Nama Kategori</th>
+                        <th scope="col">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Data kategori akan ditambahkan di sini -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal Add Kategori -->
+    <div class="modal fade" id="addKategoriModal" tabindex="-1" aria-labelledby="addKategoriModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addKategoriModalLabel">Add New Kategori</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addKategoriForm">
+                        <div class="mb-3">
+                            <label for="newNamaKategori" class="form-label">Nama Kategori</label>
+                            <input type="text" class="form-control" id="newNamaKategori" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Add Kategori</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Edit Kategori -->
+    <div class="modal fade" id="editKategoriModal" tabindex="-1" aria-labelledby="editKategoriModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editKategoriModalLabel">Edit Kategori</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editKategoriForm">
+                        <input type="hidden" id="editKategoriId">
+                        <div class="mb-3">
+                            <label for="editNamaKategori" class="form-label">Nama Kategori</label>
+                            <input type="text" class="form-control" id="editNamaKategori" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Cek apakah pengguna sudah login dan peran pengguna
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        if (!currentUser || !currentUser.isLoggedIn || currentUser.role !== 'admin') {
+            window.location.href = 'home.html'; // Akses hanya untuk admin
+        }
+
+        // Menampilkan daftar kategori
+        function displayKategori() {
+            const kategoriTable = document.getElementById('kategoriTable').getElementsByTagName('tbody')[0];
+            const kategori = JSON.parse(localStorage.getItem('kategori')) || [];
+
+            kategoriTable.innerHTML = ''; // Kosongkan tabel
+            kategori.forEach((kategoriData, index) => {
+                const row = kategoriTable.insertRow();
+                row.innerHTML = `
+                    <td>${kategoriData.id}</td>
+                    <td>${kategoriData.namaKategori}</td>
+                    <td>
+                        <button class="btn btn-info btn-sm" onclick="editKategori(${index})"><i class="fas fa-edit"></i> Edit</button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteKategori(${index})"><i class="fas fa-trash-alt"></i> Delete</button>
+                    </td>
+                `;
+            });
+        }
+
+        // Menambah kategori baru dengan ID unik berdasarkan timestamp dan angka acak
+        function generateUniqueId() {
+            const timestamp = Date.now();
+            const randomNum = Math.floor(Math.random() * 1000); // Angka acak untuk menghindari bentrok dalam milidetik yang sama
+            return timestamp.toString() + randomNum.toString();
+        }
+
+        // Menambah kategori baru
+        document.getElementById('addKategoriForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const namaKategori = document.getElementById('newNamaKategori').value;
+
+            // Membuat ID unik dengan timestamp dan angka acak
+            const kategoriId = generateUniqueId();
+
+            const kategori = JSON.parse(localStorage.getItem('kategori')) || [];
+            kategori.push({ id: kategoriId, namaKategori });
+            localStorage.setItem('kategori', JSON.stringify(kategori));
+
+            displayKategori(); // Update tabel setelah menambah kategori
+            $('#addKategoriModal').modal('hide'); // Menutup modal
+        });
+
+        // Menghapus kategori
+        function deleteKategori(index) {
+            const kategori = JSON.parse(localStorage.getItem('kategori')) || [];
+            kategori.splice(index, 1);
+            localStorage.setItem('kategori', JSON.stringify(kategori));
+            displayKategori(); // Update tabel setelah menghapus kategori
+        }
+
+        // Menampilkan data kategori yang akan diedit
+        function editKategori(index) {
+            const kategori = JSON.parse(localStorage.getItem('kategori')) || [];
+            const kategoriData = kategori[index];
+
+            // Isi form dengan data kategori
+            document.getElementById('editKategoriId').value = kategoriData.id;
+            document.getElementById('editNamaKategori').value = kategoriData.namaKategori;
+
+            // Tampilkan modal
+            $('#editKategoriModal').modal('show');
+        }
+
+        // Menyimpan perubahan setelah mengedit kategori
+        document.getElementById('editKategoriForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const id = document.getElementById('editKategoriId').value;
+            const namaKategori = document.getElementById('editNamaKategori').value;
+
+            const kategori = JSON.parse(localStorage.getItem('kategori')) || [];
+            const kategoriIndex = kategori.findIndex(k => k.id == id);
+            kategori[kategoriIndex] = { id, namaKategori }; // Update data kategori
+
+            localStorage.setItem('kategori', JSON.stringify(kategori));
+            displayKategori(); // Update tabel setelah edit
+
+            $('#editKategoriModal').modal('hide'); // Menutup modal
+        });
+
+        // Tampilkan daftar kategori saat halaman dimuat
+        displayKategori();
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+
