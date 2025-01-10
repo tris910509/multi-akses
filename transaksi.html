@@ -17,92 +17,48 @@
         </nav>
 
         <div class="my-5">
-            <h1>Daftar Transaksi</h1>
-            
-            <!-- Tombol Tambah Transaksi -->
-            <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#tambahTransaksiModal">Tambah Transaksi</button>
+            <h1>Transaksi</h1>
+
+            <!-- Keranjang -->
+            <div class="mb-4">
+                <h2>Keranjang</h2>
+                <table class="table table-bordered" id="keranjangTable">
+                    <thead>
+                        <tr>
+                            <th>Nama Produk</th>
+                            <th>Jumlah</th>
+                            <th>Harga Satuan</th>
+                            <th>Subtotal</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="5" class="text-center">Keranjang kosong</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <button class="btn btn-success" id="checkoutBtn" style="display: none;">Checkout</button>
+            </div>
 
             <!-- Daftar Transaksi -->
-            <table class="table table-striped" id="transaksiTable">
-                <thead>
-                    <tr>
-                        <th>ID Transaksi</th>
-                        <th>Nama Pelanggan</th>
-                        <th>Peran</th>
-                        <th>Total Harga</th>
-                        <th>Status</th>
-                        <th>Aksi</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- Data transaksi akan dimasukkan secara dinamis -->
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- Modal Tambah Transaksi -->
-    <div class="modal fade" id="tambahTransaksiModal" tabindex="-1" aria-labelledby="tambahTransaksiModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="tambahTransaksiModalLabel">Tambah Transaksi</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="transaksiForm">
-                        <div class="mb-3">
-                            <label for="pelangganId" class="form-label">Pilih Pelanggan</label>
-                            <select class="form-select" id="pelangganId" required>
-                                <!-- Daftar pelanggan -->
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="produkId" class="form-label">Pilih Produk</label>
-                            <select class="form-select" id="produkId" required>
-                                <!-- Daftar produk -->
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="jumlah" class="form-label">Jumlah</label>
-                            <input type="number" class="form-control" id="jumlah" min="1" required>
-                        </div>
-                        <button type="submit" class="btn btn-primary">Tambah ke Keranjang</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Pembayaran -->
-    <div class="modal fade" id="bayarModal" tabindex="-1" aria-labelledby="bayarModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="bayarModalLabel">Pembayaran</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="bayarForm">
-                        <div class="mb-3">
-                            <label for="totalHarga" class="form-label">Total Harga</label>
-                            <input type="number" class="form-control" id="totalHarga" readonly>
-                        </div>
-                        <div id="diskonSection" class="mb-3" style="display: none;">
-                            <label for="diskon" class="form-label">Diskon</label>
-                            <input type="number" class="form-control" id="diskon" readonly>
-                        </div>
-                        <div class="mb-3">
-                            <label for="jumlahBayar" class="form-label">Jumlah Bayar</label>
-                            <input type="number" class="form-control" id="jumlahBayar" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="kembalian" class="form-label">Kembalian</label>
-                            <input type="number" class="form-control" id="kembalian" readonly>
-                        </div>
-                        <button type="submit" class="btn btn-primary">Proses Pembayaran</button>
-                    </form>
-                </div>
+            <div>
+                <h2>Daftar Transaksi</h2>
+                <table class="table table-striped" id="transaksiTable">
+                    <thead>
+                        <tr>
+                            <th>ID Transaksi</th>
+                            <th>Nama Pelanggan</th>
+                            <th>Peran</th>
+                            <th>Total Harga</th>
+                            <th>Status</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Data transaksi akan dimasukkan secara dinamis -->
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
@@ -111,9 +67,134 @@
         const pelangganList = JSON.parse(localStorage.getItem('pelanggan')) || [];
         const produkList = JSON.parse(localStorage.getItem('produk')) || [];
         let transaksiList = JSON.parse(localStorage.getItem('transaksi')) || [];
-        let selectedTransaksi = null;
+        let keranjang = [];
 
-        // Populate pelanggan and produk options
+        // Tampilkan keranjang
+        function displayKeranjang() {
+            const tableBody = document.getElementById('keranjangTable').getElementsByTagName('tbody')[0];
+            tableBody.innerHTML = '';
+
+            if (keranjang.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="5" class="text-center">Keranjang kosong</td></tr>`;
+                document.getElementById('checkoutBtn').style.display = 'none';
+            } else {
+                keranjang.forEach((item, index) => {
+                    const row = `
+                        <tr>
+                            <td>${item.namaProduk}</td>
+                            <td>${item.jumlah}</td>
+                            <td>${item.hargaSatuan}</td>
+                            <td>${item.jumlah * item.hargaSatuan}</td>
+                            <td>
+                                <button class="btn btn-danger btn-sm" onclick="hapusDariKeranjang(${index})">
+                                    <i class="fas fa-trash"></i> Hapus
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                    tableBody.innerHTML += row;
+                });
+                document.getElementById('checkoutBtn').style.display = 'block';
+            }
+        }
+
+        // Tambahkan produk ke keranjang
+        document.getElementById('transaksiForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const produkId = document.getElementById('produkId').value;
+            const jumlah = parseInt(document.getElementById('jumlah').value);
+
+            const produk = produkList.find(p => p.id === produkId);
+
+            if (produk && produk.stok >= jumlah) {
+                keranjang.push({
+                    idProduk: produk.id,
+                    namaProduk: produk.nama,
+                    hargaSatuan: produk.harga,
+                    jumlah,
+                });
+
+                produk.stok -= jumlah;
+                localStorage.setItem('produk', JSON.stringify(produkList));
+
+                displayKeranjang();
+                populateOptions();
+                alert('Produk berhasil ditambahkan ke keranjang!');
+            } else {
+                alert('Stok tidak mencukupi!');
+            }
+        });
+
+        // Hapus produk dari keranjang
+        function hapusDariKeranjang(index) {
+            const item = keranjang[index];
+            const produk = produkList.find(p => p.id === item.idProduk);
+
+            if (produk) {
+                produk.stok += item.jumlah;
+                localStorage.setItem('produk', JSON.stringify(produkList));
+            }
+
+            keranjang.splice(index, 1);
+            displayKeranjang();
+            populateOptions();
+        }
+
+        // Checkout keranjang
+        document.getElementById('checkoutBtn').addEventListener('click', function() {
+            const pelangganId = document.getElementById('pelangganId').value;
+            const pelanggan = pelangganList.find(p => p.id === pelangganId);
+
+            if (!pelanggan) {
+                alert('Pilih pelanggan terlebih dahulu!');
+                return;
+            }
+
+            const totalHarga = keranjang.reduce((total, item) => total + item.jumlah * item.hargaSatuan, 0);
+
+            const transaksi = {
+                id: `TRX-${Date.now()}`,
+                namaPelanggan: pelanggan.nama,
+                peranPelanggan: pelanggan.peran,
+                totalHarga,
+                status: 'Belum Dibayar',
+                keranjang: [...keranjang],
+            };
+
+            transaksiList.push(transaksi);
+            localStorage.setItem('transaksi', JSON.stringify(transaksiList));
+
+            keranjang = [];
+            displayKeranjang();
+            displayTransaksi();
+            alert('Transaksi berhasil dibuat!');
+        });
+
+        // Display daftar transaksi
+        function displayTransaksi() {
+            const tableBody = document.getElementById('transaksiTable').getElementsByTagName('tbody')[0];
+            tableBody.innerHTML = '';
+
+            transaksiList.forEach(t => {
+                const row = `
+                    <tr>
+                        <td>${t.id}</td>
+                        <td>${t.namaPelanggan}</td>
+                        <td>${t.peranPelanggan}</td>
+                        <td>${t.totalHarga}</td>
+                        <td>${t.status}</td>
+                        <td>
+                            ${t.status === 'Belum Dibayar' ? 
+                                `<button class="btn btn-success" onclick="bayarTransaksi('${t.id}')">Bayar</button>` : 
+                                '<span class="badge bg-success">Sudah Dibayar</span>'}
+                        </td>
+                    </tr>
+                `;
+                tableBody.innerHTML += row;
+            });
+        }
+
+        // Populate pelanggan dan produk options
         function populateOptions() {
             const pelangganSelect = document.getElementById('pelangganId');
             const produkSelect = document.getElementById('produkId');
@@ -125,63 +206,8 @@
                 `<option value="${p.id}">${p.nama} - Stok: ${p.stok}</option>`).join('');
         }
 
-        // Display transaksi
-        function displayTransaksi() {
-            const tableBody = document.getElementById('transaksiTable').getElementsByTagName('tbody')[0];
-            tableBody.innerHTML = transaksiList.map(t => `
-                <tr>
-                    <td>${t.id}</td>
-                    <td>${t.namaPelanggan}</td>
-                    <td>${t.peranPelanggan}</td>
-                    <td>${t.totalHarga}</td>
-                    <td>${t.status}</td>
-                    <td>
-                        ${t.status === 'Belum Dibayar' ? 
-                            `<button class="btn btn-success" onclick="openBayarModal('${t.id}')">Bayar</button>` : 
-                            '<span class="badge bg-success">Sudah Dibayar</span>'}
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        // Open modal bayar
-        function openBayarModal(id) {
-            selectedTransaksi = transaksiList.find(t => t.id === id);
-            document.getElementById('totalHarga').value = selectedTransaksi.totalHarga;
-
-            if (selectedTransaksi.peranPelanggan === 'member') {
-                document.getElementById('diskonSection').style.display = 'block';
-                document.getElementById('diskon').value = selectedTransaksi.totalHarga * 0.1; // 10% diskon
-            } else {
-                document.getElementById('diskonSection').style.display = 'none';
-            }
-
-            document.getElementById('jumlahBayar').value = '';
-            document.getElementById('kembalian').value = '';
-
-            const modal = new bootstrap.Modal(document.getElementById('bayarModal'));
-            modal.show();
-        }
-
-        // Handle pembayaran
-        document.getElementById('bayarForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const jumlahBayar = parseFloat(document.getElementById('jumlahBayar').value);
-            const totalHarga = parseFloat(document.getElementById('totalHarga').value);
-            const kembalian = jumlahBayar - totalHarga;
-
-            if (jumlahBayar >= totalHarga) {
-                selectedTransaksi.status = 'Sudah Dibayar';
-                transaksiList = transaksiList.map(t => t.id === selectedTransaksi.id ? selectedTransaksi : t);
-                localStorage.setItem('transaksi', JSON.stringify(transaksiList));
-                displayTransaksi();
-                new bootstrap.Modal(document.getElementById('bayarModal')).hide();
-            } else {
-                alert('Jumlah bayar kurang dari total harga!');
-            }
-        });
-
         populateOptions();
+        displayKeranjang();
         displayTransaksi();
     </script>
 
