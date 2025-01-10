@@ -5,31 +5,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kategori Management</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet"> <!-- Font Awesome for Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
 </head>
 <body>
     <div class="container">
         <nav class="navbar navbar-expand-lg navbar-light bg-light">
             <a class="navbar-brand" href="home.html">Home</a>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto" id="navbarItems"></ul>
+                <ul class="navbar-nav ms-auto"></ul>
             </div>
         </nav>
 
         <div class="my-5">
             <h1>Kategori Management</h1>
-            <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addKategoriModal"><i class="fas fa-plus-circle"></i> Add Kategori</button>
+            <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addKategoriModal">
+                <i class="fas fa-plus-circle"></i> Add Kategori
+            </button>
 
             <table class="table table-striped" id="kategoriTable">
                 <thead>
                     <tr>
-                        <th scope="col">ID</th>
+                        <th scope="col">ID Kategori</th>
                         <th scope="col">Nama Kategori</th>
                         <th scope="col">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <!-- Data kategori akan ditambahkan di sini -->
+                    <!-- Data kategori akan ditampilkan di sini -->
                 </tbody>
             </table>
         </div>
@@ -71,7 +73,7 @@
                             <label for="editNamaKategori" class="form-label">Nama Kategori</label>
                             <input type="text" class="form-control" id="editNamaKategori" required>
                         </div>
-                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                        <button type="submit" class="btn btn-primary">Update Kategori</button>
                     </form>
                 </div>
             </div>
@@ -79,98 +81,83 @@
     </div>
 
     <script>
-        // Cek apakah pengguna sudah login dan peran pengguna
-        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-        if (!currentUser || !currentUser.isLoggedIn || currentUser.role !== 'admin') {
-            window.location.href = 'home.html'; // Akses hanya untuk admin
-        }
-
-        // Menampilkan daftar kategori
+        // Fungsi untuk menampilkan daftar kategori
         function displayKategori() {
             const kategoriTable = document.getElementById('kategoriTable').getElementsByTagName('tbody')[0];
             const kategori = JSON.parse(localStorage.getItem('kategori')) || [];
 
             kategoriTable.innerHTML = ''; // Kosongkan tabel
-            kategori.forEach((kategoriData, index) => {
+            kategori.forEach(item => {
                 const row = kategoriTable.insertRow();
                 row.innerHTML = `
-                    <td>${kategoriData.id}</td>
-                    <td>${kategoriData.namaKategori}</td>
+                    <td>${item.id}</td>
+                    <td>${item.nama}</td>
                     <td>
-                        <button class="btn btn-info btn-sm" onclick="editKategori(${index})"><i class="fas fa-edit"></i> Edit</button>
-                        <button class="btn btn-danger btn-sm" onclick="deleteKategori(${index})"><i class="fas fa-trash-alt"></i> Delete</button>
+                        <button class="btn btn-info btn-sm" onclick="editKategori('${item.id}')"><i class="fas fa-edit"></i> Edit</button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteKategori('${item.id}')"><i class="fas fa-trash-alt"></i> Delete</button>
                     </td>
                 `;
             });
         }
 
-        // Menambah kategori baru dengan ID unik berdasarkan timestamp dan angka acak
-        function generateUniqueId() {
-            const timestamp = Date.now();
-            const randomNum = Math.floor(Math.random() * 1000); // Angka acak untuk menghindari bentrok dalam milidetik yang sama
-            return timestamp.toString() + randomNum.toString();
-        }
-
-        // Menambah kategori baru
-        document.getElementById('addKategoriForm').addEventListener('submit', function(event) {
+        // Fungsi untuk menambahkan kategori
+        document.getElementById('addKategoriForm').addEventListener('submit', function (event) {
             event.preventDefault();
 
-            const namaKategori = document.getElementById('newNamaKategori').value;
-
-            // Membuat ID unik dengan timestamp dan angka acak
-            const kategoriId = generateUniqueId();
-
+            const nama = document.getElementById('newNamaKategori').value;
+            const kategoriId = `CAT-${Date.now()}`;
             const kategori = JSON.parse(localStorage.getItem('kategori')) || [];
-            kategori.push({ id: kategoriId, namaKategori });
+            
+            kategori.push({ id: kategoriId, nama });
             localStorage.setItem('kategori', JSON.stringify(kategori));
 
-            displayKategori(); // Update tabel setelah menambah kategori
-            $('#addKategoriModal').modal('hide'); // Menutup modal
+            displayKategori();
+            document.getElementById('addKategoriForm').reset();
+            $('#addKategoriModal').modal('hide');
         });
 
-        // Menghapus kategori
-        function deleteKategori(index) {
+        // Fungsi untuk mengedit kategori
+        function editKategori(id) {
             const kategori = JSON.parse(localStorage.getItem('kategori')) || [];
-            kategori.splice(index, 1);
-            localStorage.setItem('kategori', JSON.stringify(kategori));
-            displayKategori(); // Update tabel setelah menghapus kategori
-        }
+            const item = kategori.find(k => k.id === id);
 
-        // Menampilkan data kategori yang akan diedit
-        function editKategori(index) {
-            const kategori = JSON.parse(localStorage.getItem('kategori')) || [];
-            const kategoriData = kategori[index];
+            document.getElementById('editKategoriId').value = item.id;
+            document.getElementById('editNamaKategori').value = item.nama;
 
-            // Isi form dengan data kategori
-            document.getElementById('editKategoriId').value = kategoriData.id;
-            document.getElementById('editNamaKategori').value = kategoriData.namaKategori;
-
-            // Tampilkan modal
             $('#editKategoriModal').modal('show');
         }
 
-        // Menyimpan perubahan setelah mengedit kategori
-        document.getElementById('editKategoriForm').addEventListener('submit', function(event) {
+        // Fungsi untuk memperbarui kategori
+        document.getElementById('editKategoriForm').addEventListener('submit', function (event) {
             event.preventDefault();
 
             const id = document.getElementById('editKategoriId').value;
-            const namaKategori = document.getElementById('editNamaKategori').value;
+            const nama = document.getElementById('editNamaKategori').value;
 
-            const kategori = JSON.parse(localStorage.getItem('kategori')) || [];
-            const kategoriIndex = kategori.findIndex(k => k.id == id);
-            kategori[kategoriIndex] = { id, namaKategori }; // Update data kategori
+            let kategori = JSON.parse(localStorage.getItem('kategori')) || [];
+            const kategoriIndex = kategori.findIndex(k => k.id === id);
 
+            kategori[kategoriIndex].nama = nama;
             localStorage.setItem('kategori', JSON.stringify(kategori));
-            displayKategori(); // Update tabel setelah edit
 
-            $('#editKategoriModal').modal('hide'); // Menutup modal
+            displayKategori();
+            document.getElementById('editKategoriForm').reset();
+            $('#editKategoriModal').modal('hide');
         });
 
-        // Tampilkan daftar kategori saat halaman dimuat
+        // Fungsi untuk menghapus kategori
+        function deleteKategori(id) {
+            let kategori = JSON.parse(localStorage.getItem('kategori')) || [];
+            kategori = kategori.filter(k => k.id !== id);
+            localStorage.setItem('kategori', JSON.stringify(kategori));
+
+            displayKategori();
+        }
+
+        // Tampilkan data awal
         displayKategori();
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
-
