@@ -14,30 +14,56 @@
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="login.html">Login</a>
-                    </li>
+                <ul class="navbar-nav ms-auto" id="navbarItems">
+                    <!-- Navbar Items will be added dynamically -->
                 </ul>
             </div>
         </nav>
 
         <div class="text-center my-5">
             <h1>Welcome to the Home Page</h1>
-            <p>This is a simple home page. You can log out using the button below.</p>
+            <p>This page is for managing various resources with dynamic access based on user roles.</p>
             <button class="btn btn-danger" onclick="logout()">Logout</button>
         </div>
     </div>
 
     <script>
-        // Cek apakah pengguna sudah login atau belum
-        if (!localStorage.getItem('isLoggedIn')) {
+        // Cek apakah pengguna sudah login dan peran pengguna
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        if (!currentUser || !currentUser.isLoggedIn) {
             window.location.href = 'login.html';
         }
 
+        // Menambahkan menu di navbar sesuai dengan hak akses pengguna
+        const navbarItems = document.getElementById('navbarItems');
+        const menuItems = [
+            { name: 'User', role: 'admin' },
+            { name: 'Pelanggan', role: 'admin' },
+            { name: 'Produk', role: 'admin' },
+            { name: 'Kategori', role: 'admin' },
+            { name: 'Item', role: 'admin' },
+            { name: 'Suplayer', role: 'admin' },
+            { name: 'Transaksi', role: 'user' },
+            { name: 'Laporan', role: 'admin' }
+        ];
+
+        // Menambahkan menu berdasarkan peran pengguna
+        menuItems.forEach(item => {
+            if (item.role === currentUser.role || item.role === 'user') {
+                const li = document.createElement('li');
+                li.classList.add('nav-item');
+                const a = document.createElement('a');
+                a.classList.add('nav-link');
+                a.href = '#';
+                a.textContent = item.name;
+                li.appendChild(a);
+                navbarItems.appendChild(li);
+            }
+        });
+
         // Fungsi logout
         function logout() {
-            localStorage.removeItem('isLoggedIn');
+            localStorage.removeItem('currentUser');
             window.location.href = 'login.html';
         }
     </script>
