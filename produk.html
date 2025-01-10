@@ -1,1 +1,168 @@
-produk.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Produk Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <a class="navbar-brand" href="home.html">Home</a>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto"></ul>
+            </div>
+        </nav>
+
+        <div class="my-5">
+            <h1>Produk Management</h1>
+            <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addProdukModal"><i class="fas fa-plus-circle"></i> Add Produk</button>
+
+            <table class="table table-striped" id="produkTable">
+                <thead>
+                    <tr>
+                        <th scope="col">ID</th>
+                        <th scope="col">Nama Produk</th>
+                        <th scope="col">Kategori</th>
+                        <th scope="col">Item</th>
+                        <th scope="col">Suplayer</th>
+                        <th scope="col">Harga</th>
+                        <th scope="col">Stok</th>
+                        <th scope="col">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Data produk akan ditambahkan di sini -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal Add Produk -->
+    <div class="modal fade" id="addProdukModal" tabindex="-1" aria-labelledby="addProdukModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addProdukModalLabel">Add New Produk</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addProdukForm">
+                        <div class="mb-3">
+                            <label for="newNamaProduk" class="form-label">Nama Produk</label>
+                            <input type="text" class="form-control" id="newNamaProduk" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="newKategori" class="form-label">Kategori</label>
+                            <select class="form-control" id="newKategori" required></select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="newItem" class="form-label">Item</label>
+                            <select class="form-control" id="newItem" required></select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="newSuplayer" class="form-label">Suplayer</label>
+                            <select class="form-control" id="newSuplayer" required></select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="newHarga" class="form-label">Harga</label>
+                            <input type="number" class="form-control" id="newHarga" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="newStok" class="form-label">Stok</label>
+                            <input type="number" class="form-control" id="newStok" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Add Produk</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Fetch data dari localStorage untuk Kategori, Item, dan Suplayer
+        function fetchOptions() {
+            const kategoriData = JSON.parse(localStorage.getItem('kategori')) || [];
+            const itemData = JSON.parse(localStorage.getItem('items')) || [];
+            const suplayerData = JSON.parse(localStorage.getItem('suplayer')) || [];
+
+            // Populate Kategori
+            const kategoriSelect = document.getElementById('newKategori');
+            kategoriSelect.innerHTML = '<option value="">Select Kategori</option>';
+            kategoriData.forEach(kategori => {
+                kategoriSelect.innerHTML += `<option value="${kategori.id}">${kategori.nama}</option>`;
+            });
+
+            // Populate Item
+            const itemSelect = document.getElementById('newItem');
+            itemSelect.innerHTML = '<option value="">Select Item</option>';
+            itemData.forEach(item => {
+                itemSelect.innerHTML += `<option value="${item.id}">${item.nama}</option>`;
+            });
+
+            // Populate Suplayer
+            const suplayerSelect = document.getElementById('newSuplayer');
+            suplayerSelect.innerHTML = '<option value="">Select Suplayer</option>';
+            suplayerData.forEach(suplayer => {
+                suplayerSelect.innerHTML += `<option value="${suplayer.id}">${suplayer.nama}</option>`;
+            });
+        }
+
+        // Menampilkan daftar produk
+        function displayProduk() {
+            const produkTable = document.getElementById('produkTable').getElementsByTagName('tbody')[0];
+            const produkData = JSON.parse(localStorage.getItem('produk')) || [];
+
+            produkTable.innerHTML = ''; // Kosongkan tabel
+            produkData.forEach(produk => {
+                const kategori = JSON.parse(localStorage.getItem('kategori')).find(k => k.id === produk.kategori) || { nama: 'Unknown' };
+                const item = JSON.parse(localStorage.getItem('items')).find(i => i.id === produk.item) || { nama: 'Unknown' };
+                const suplayer = JSON.parse(localStorage.getItem('suplayer')).find(s => s.id === produk.suplayer) || { nama: 'Unknown' };
+
+                const row = produkTable.insertRow();
+                row.innerHTML = `
+                    <td>${produk.id}</td>
+                    <td>${produk.nama}</td>
+                    <td>${kategori.nama}</td>
+                    <td>${item.nama}</td>
+                    <td>${suplayer.nama}</td>
+                    <td>${produk.harga}</td>
+                    <td>${produk.stok}</td>
+                    <td>
+                        <button class="btn btn-info btn-sm"><i class="fas fa-edit"></i> Edit</button>
+                        <button class="btn btn-danger btn-sm"><i class="fas fa-trash-alt"></i> Delete</button>
+                    </td>
+                `;
+            });
+        }
+
+        // Tambah produk baru
+        document.getElementById('addProdukForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const nama = document.getElementById('newNamaProduk').value;
+            const kategori = document.getElementById('newKategori').value;
+            const item = document.getElementById('newItem').value;
+            const suplayer = document.getElementById('newSuplayer').value;
+            const harga = parseInt(document.getElementById('newHarga').value, 10);
+            const stok = parseInt(document.getElementById('newStok').value, 10);
+
+            const produkId = `PROD-${Date.now()}`;
+            const produkData = JSON.parse(localStorage.getItem('produk')) || [];
+            produkData.push({ id: produkId, nama, kategori, item, suplayer, harga, stok });
+            localStorage.setItem('produk', JSON.stringify(produkData));
+
+            displayProduk();
+            $('#addProdukModal').modal('hide');
+        });
+
+        // Tampilkan data awal
+        fetchOptions();
+        displayProduk();
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
