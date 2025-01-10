@@ -140,7 +140,7 @@
             });
         }
 
-        // Menambah pelanggan baru
+        // Menambah pelanggan baru dengan ID berdasarkan tanggal (timestamp)
         document.getElementById('addPelangganForm').addEventListener('submit', function(event) {
             event.preventDefault();
 
@@ -149,8 +149,10 @@
             const noHandphone = document.getElementById('newNoHandphone').value;
             const alamat = document.getElementById('newAlamat').value;
 
+            // Membuat ID unik berdasarkan timestamp
+            const pelangganId = Date.now(); // Menggunakan timestamp sebagai ID unik
+
             const pelanggan = JSON.parse(localStorage.getItem('pelanggan')) || [];
-            const pelangganId = pelanggan.length ? pelanggan[pelanggan.length - 1].id + 1 : 1; // Generate ID unik
             pelanggan.push({ id: pelangganId, nama, jenisKelamin, noHandphone, alamat });
             localStorage.setItem('pelanggan', JSON.stringify(pelanggan));
 
