@@ -37,24 +37,23 @@
         // Menambahkan menu di navbar sesuai dengan hak akses pengguna
         const navbarItems = document.getElementById('navbarItems');
         const menuItems = [
-            { name: 'User', role: 'admin' },
-            { name: 'Pelanggan', role: 'admin' },
-            { name: 'Produk', role: 'admin' },
-            { name: 'Kategori', role: 'admin' },
-            { name: 'Item', role: 'admin' },
-            { name: 'Suplayer', role: 'admin' },
-            { name: 'Transaksi', role: 'user' },
-            { name: 'Laporan', role: 'admin' }
+            { name: 'User', role: 'admin', link: 'user.html' },
+            { name: 'Pelanggan', role: 'admin', link: 'pelanggan.html' },
+            { name: 'Produk', role: 'admin', link: 'produk.html' },
+            { name: 'Kategori', role: 'admin', link: 'kategori.html' },
+            { name: 'Item', role: 'admin', link: 'item.html' },
+            { name: 'Suplayer', role: 'admin', link: 'suplayer.html' },
+            { name: 'Transaksi', role: 'user', link: 'transaksi.html' },
+            { name: 'Laporan', role: 'admin', link: 'laporan.html' }
         ];
 
-        // Menambahkan menu berdasarkan peran pengguna
         menuItems.forEach(item => {
             if (item.role === currentUser.role || item.role === 'user') {
                 const li = document.createElement('li');
                 li.classList.add('nav-item');
                 const a = document.createElement('a');
                 a.classList.add('nav-link');
-                a.href = '#';
+                a.href = item.link;
                 a.textContent = item.name;
                 li.appendChild(a);
                 navbarItems.appendChild(li);
