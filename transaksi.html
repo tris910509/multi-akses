@@ -23,7 +23,9 @@
                 <thead>
                     <tr>
                         <th scope="col">ID Transaksi</th>
-                        <th scope="col">Pelanggan</th>
+                        <th scope="col">ID Pelanggan</th>
+                        <th scope="col">Nama Pelanggan</th>
+                        <th scope="col">Peran Pelanggan</th>
                         <th scope="col">Total Harga</th>
                         <th scope="col">Tanggal</th>
                         <th scope="col">Status Pembayaran</th>
@@ -81,13 +83,20 @@
         function displayTransaksi() {
             const transaksiTable = document.getElementById('transaksiTable').getElementsByTagName('tbody')[0];
             const transaksi = JSON.parse(localStorage.getItem('transaksi')) || [];
+            const pelanggan = JSON.parse(localStorage.getItem('pelanggan')) || [];
 
             transaksiTable.innerHTML = '';
             transaksi.forEach(t => {
+                // Find the customer associated with the transaction
+                const pelangganData = pelanggan.find(p => p.id === t.pelangganId);
+                const peranPelanggan = pelangganData ? pelangganData.peran : 'Tidak Diketahui';
+
                 const row = transaksiTable.insertRow();
                 row.innerHTML = `
                     <td>${t.id}</td>
                     <td>${t.pelangganId}</td>
+                    <td>${pelangganData ? pelangganData.nama : 'Tidak Diketahui'}</td>
+                    <td>${peranPelanggan}</td>
                     <td>${t.totalHarga}</td>
                     <td>${t.tanggal}</td>
                     <td>${t.statusPembayaran || 'Belum Dibayar'}</td>
