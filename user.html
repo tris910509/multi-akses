@@ -5,31 +5,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Management</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet"> <!-- Font Awesome for Icons -->
 </head>
 <body>
     <div class="container">
         <nav class="navbar navbar-expand-lg navbar-light bg-light">
             <a class="navbar-brand" href="home.html">Home</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto" id="navbarItems">
-                    <!-- Navbar Items will be added dynamically -->
-                </ul>
+                <ul class="navbar-nav ms-auto" id="navbarItems"></ul>
             </div>
         </nav>
 
         <div class="my-5">
             <h1>User Management</h1>
-            <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addUserModal">Add User</button>
+            <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addUserModal"><i class="fas fa-user-plus"></i> Add User</button>
 
             <table class="table table-striped" id="userTable">
                 <thead>
                     <tr>
+                        <th scope="col">ID</th>
                         <th scope="col">Username</th>
                         <th scope="col">Role</th>
-                        <th scope="col">Action</th>
+                        <th scope="col">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -57,10 +54,41 @@
                             <label for="newRole" class="form-label">Role</label>
                             <select class="form-select" id="newRole">
                                 <option value="admin">Admin</option>
-                                <option value="user">User</option>
+                                <option value="kasir">Kasir</option>
+                                <option value="operator">Operator</option>
                             </select>
                         </div>
                         <button type="submit" class="btn btn-primary">Add User</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Edit User -->
+    <div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editUserModalLabel">Edit User</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editUserForm">
+                        <input type="hidden" id="editUserId">
+                        <div class="mb-3">
+                            <label for="editUsername" class="form-label">Username</label>
+                            <input type="text" class="form-control" id="editUsername" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editRole" class="form-label">Role</label>
+                            <select class="form-select" id="editRole">
+                                <option value="admin">Admin</option>
+                                <option value="kasir">Kasir</option>
+                                <option value="operator">Operator</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
                     </form>
                 </div>
             </div>
@@ -83,10 +111,12 @@
             users.forEach((user, index) => {
                 const row = userTable.insertRow();
                 row.innerHTML = `
+                    <td>${user.id}</td>
                     <td>${user.username}</td>
                     <td>${user.role}</td>
                     <td>
-                        <button class="btn btn-danger btn-sm" onclick="deleteUser(${index})">Delete</button>
+                        <button class="btn btn-info btn-sm" onclick="editUser(${index})"><i class="fas fa-edit"></i> Edit</button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteUser(${index})"><i class="fas fa-trash-alt"></i> Delete</button>
                     </td>
                 `;
             });
@@ -100,7 +130,8 @@
             const role = document.getElementById('newRole').value;
 
             const users = JSON.parse(localStorage.getItem('users')) || [];
-            users.push({ username, role });
+            const userId = users.length ? users[users.length - 1].id + 1 : 1; // Generate ID unik
+            users.push({ id: userId, username, role });
             localStorage.setItem('users', JSON.stringify(users));
 
             displayUsers(); // Update tabel setelah menambah user
@@ -114,6 +145,38 @@
             localStorage.setItem('users', JSON.stringify(users));
             displayUsers(); // Update tabel setelah menghapus user
         }
+
+        // Menampilkan data user yang akan diedit
+        function editUser(index) {
+            const users = JSON.parse(localStorage.getItem('users')) || [];
+            const user = users[index];
+
+            // Isi form dengan data user
+            document.getElementById('editUserId').value = user.id;
+            document.getElementById('editUsername').value = user.username;
+            document.getElementById('editRole').value = user.role;
+
+            // Tampilkan modal
+            $('#editUserModal').modal('show');
+        }
+
+        // Menyimpan perubahan setelah mengedit user
+        document.getElementById('editUserForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const id = document.getElementById('editUserId').value;
+            const username = document.getElementById('editUsername').value;
+            const role = document.getElementById('editRole').value;
+
+            const users = JSON.parse(localStorage.getItem('users')) || [];
+            const userIndex = users.findIndex(user => user.id == id);
+            users[userIndex] = { id, username, role }; // Update user
+
+            localStorage.setItem('users', JSON.stringify(users));
+            displayUsers(); // Update tabel setelah edit
+
+            $('#editUserModal').modal('hide'); // Menutup modal
+        });
 
         // Tampilkan daftar user saat halaman dimuat
         displayUsers();
