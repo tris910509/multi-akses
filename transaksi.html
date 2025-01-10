@@ -17,20 +17,17 @@
         </nav>
 
         <div class="my-5">
-            <h1>Transaksi</h1>
-            <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addTransaksiModal">
-                <i class="fas fa-plus-circle"></i> Add Transaksi
-            </button>
+            <h1>Daftar Transaksi</h1>
 
             <table class="table table-striped" id="transaksiTable">
                 <thead>
                     <tr>
                         <th scope="col">ID Transaksi</th>
-                        <th scope="col">ID Pelanggan</th>
-                        <th scope="col">Nama Produk</th>
-                        <th scope="col">Jumlah</th>
+                        <th scope="col">Pelanggan</th>
                         <th scope="col">Total Harga</th>
                         <th scope="col">Tanggal</th>
+                        <th scope="col">Status Pembayaran</th>
+                        <th scope="col">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -40,37 +37,39 @@
         </div>
     </div>
 
-    <!-- Modal Add Transaksi -->
-    <div class="modal fade" id="addTransaksiModal" tabindex="-1" aria-labelledby="addTransaksiModalLabel" aria-hidden="true">
+    <!-- Modal Bayar -->
+    <div class="modal fade" id="bayarModal" tabindex="-1" aria-labelledby="bayarModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="addTransaksiModalLabel">Add New Transaksi</h5>
+                    <h5 class="modal-title" id="bayarModalLabel">Pembayaran Transaksi</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="addTransaksiForm">
+                    <form id="pembayaranForm">
                         <div class="mb-3">
-                            <label for="newPelangganId" class="form-label">Pelanggan</label>
-                            <select class="form-select" id="newPelangganId" required>
-                                <!-- Data pelanggan akan dimasukkan di sini -->
+                            <label for="transaksiId" class="form-label">Pilih Transaksi</label>
+                            <select class="form-select" id="transaksiId" required>
+                                <!-- Data transaksi akan dimasukkan di sini -->
                             </select>
                         </div>
                         <div class="mb-3">
-                            <label for="newProdukId" class="form-label">Produk</label>
-                            <select class="form-select" id="newProdukId" required>
-                                <!-- Data produk akan dimasukkan di sini -->
+                            <label for="metodePembayaran" class="form-label">Metode Pembayaran</label>
+                            <select class="form-select" id="metodePembayaran" required>
+                                <option value="tunai">Tunai</option>
+                                <option value="transfer">Transfer Bank</option>
+                                <option value="kartu_kredit">Kartu Kredit</option>
                             </select>
                         </div>
                         <div class="mb-3">
-                            <label for="newJumlah" class="form-label">Jumlah</label>
-                            <input type="number" class="form-control" id="newJumlah" required min="1">
+                            <label for="jumlahBayar" class="form-label">Jumlah Bayar</label>
+                            <input type="number" class="form-control" id="jumlahBayar" required>
                         </div>
                         <div class="mb-3">
-                            <label for="newTotalHarga" class="form-label">Total Harga</label>
-                            <input type="number" class="form-control" id="newTotalHarga" readonly>
+                            <label for="kembalian" class="form-label">Kembalian</label>
+                            <input type="number" class="form-control" id="kembalian" readonly>
                         </div>
-                        <button type="submit" class="btn btn-primary">Add Transaksi</button>
+                        <button type="submit" class="btn btn-primary">Proses Pembayaran</button>
                     </form>
                 </div>
             </div>
@@ -89,80 +88,71 @@
                 row.innerHTML = `
                     <td>${t.id}</td>
                     <td>${t.pelangganId}</td>
-                    <td>${t.produkId}</td>
-                    <td>${t.jumlah}</td>
                     <td>${t.totalHarga}</td>
                     <td>${t.tanggal}</td>
+                    <td>${t.statusPembayaran || 'Belum Dibayar'}</td>
+                    <td>
+                        ${t.statusPembayaran === 'Belum Dibayar' ? 
+                            `<button class="btn btn-success" onclick="openBayarModal('${t.id}')">Bayar</button>` : 
+                            '<button class="btn btn-secondary" disabled>Dibayar</button>'
+                        }
+                    </td>
                 `;
             });
         }
 
-        // Function to calculate the total price
-        function calculateTotalHarga(jumlah, produkId) {
-            const produk = JSON.parse(localStorage.getItem('produk')) || [];
-            const selectedProduk = produk.find(p => p.id === produkId);
-            return selectedProduk ? selectedProduk.harga * jumlah : 0;
+        // Function to open bayar modal
+        function openBayarModal(transaksiId) {
+            const transaksi = JSON.parse(localStorage.getItem('transaksi')) || [];
+            const selectedTransaksi = transaksi.find(t => t.id === transaksiId);
+
+            if (selectedTransaksi) {
+                document.getElementById('transaksiId').value = transaksiId;
+                document.getElementById('jumlahBayar').value = selectedTransaksi.totalHarga;
+                document.getElementById('kembalian').value = 0;
+            }
         }
 
-        // Function to load data for pelanggan and produk
-        function loadPelangganAndProduk() {
-            const pelangganSelect = document.getElementById('newPelangganId');
-            const produkSelect = document.getElementById('newProdukId');
-            const pelanggan = JSON.parse(localStorage.getItem('pelanggan')) || [];
-            const produk = JSON.parse(localStorage.getItem('produk')) || [];
+        // Function to calculate kembalian
+        document.getElementById('jumlahBayar').addEventListener('input', function () {
+            const jumlahBayar = parseFloat(this.value);
+            const totalHarga = parseFloat(document.getElementById('jumlahBayar').value);
 
-            pelangganSelect.innerHTML = '';
-            produkSelect.innerHTML = '';
+            if (jumlahBayar >= totalHarga) {
+                const kembalian = jumlahBayar - totalHarga;
+                document.getElementById('kembalian').value = kembalian.toFixed(2);
+            } else {
+                document.getElementById('kembalian').value = 0;
+            }
+        });
 
-            // Insert pelanggan options
-            pelanggan.forEach(p => {
-                const option = document.createElement('option');
-                option.value = p.id;
-                option.textContent = p.nama;
-                pelangganSelect.appendChild(option);
-            });
-
-            // Insert produk options
-            produk.forEach(p => {
-                const option = document.createElement('option');
-                option.value = p.id;
-                option.textContent = p.nama;
-                produkSelect.appendChild(option);
-            });
-        }
-
-        // Event listener for form submission to add transaksi
-        document.getElementById('addTransaksiForm').addEventListener('submit', function (event) {
+        // Event listener for pembayaran form
+        document.getElementById('pembayaranForm').addEventListener('submit', function (event) {
             event.preventDefault();
 
-            const pelangganId = document.getElementById('newPelangganId').value;
-            const produkId = document.getElementById('newProdukId').value;
-            const jumlah = parseInt(document.getElementById('newJumlah').value);
-            const totalHarga = calculateTotalHarga(jumlah, produkId);
-            const transaksiId = `TRX-${Date.now()}`;
-            const tanggal = new Date().toLocaleString();
+            const transaksiId = document.getElementById('transaksiId').value;
+            const metodePembayaran = document.getElementById('metodePembayaran').value;
+            const jumlahBayar = parseFloat(document.getElementById('jumlahBayar').value);
+            const kembalian = parseFloat(document.getElementById('kembalian').value);
 
             const transaksi = JSON.parse(localStorage.getItem('transaksi')) || [];
-            transaksi.push({ id: transaksiId, pelangganId, produkId, jumlah, totalHarga, tanggal });
-            localStorage.setItem('transaksi', JSON.stringify(transaksi));
+            const transaksiIndex = transaksi.findIndex(t => t.id === transaksiId);
 
-            // Update stok produk
-            const produk = JSON.parse(localStorage.getItem('produk')) || [];
-            const produkIndex = produk.findIndex(p => p.id === produkId);
-            if (produkIndex !== -1) {
-                produk[produkIndex].stok -= jumlah;
-                localStorage.setItem('produk', JSON.stringify(produk));
+            if (transaksiIndex !== -1) {
+                transaksi[transaksiIndex].statusPembayaran = 'Dibayar';
+                transaksi[transaksiIndex].metodePembayaran = metodePembayaran;
+                transaksi[transaksiIndex].jumlahBayar = jumlahBayar;
+                transaksi[transaksiIndex].kembalian = kembalian;
+                localStorage.setItem('transaksi', JSON.stringify(transaksi));
             }
 
             displayTransaksi();
-            document.getElementById('addTransaksiForm').reset();
-            $('#addTransaksiModal').modal('hide');
+            document.getElementById('pembayaranForm').reset();
+            $('#bayarModal').modal('hide');
         });
 
         // Initialize page data
-        loadPelangganAndProduk();
         displayTransaksi();
-
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
