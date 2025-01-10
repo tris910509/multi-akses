@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supplier Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <a class="navbar-brand" href="home.html">Home</a>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto"></ul>
+            </div>
+        </nav>
+
+        <div class="my-5">
+            <h1>Supplier Management</h1>
+            <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addSupplierModal">
+                <i class="fas fa-plus-circle"></i> Add Supplier
+            </button>
+
+            <table class="table table-striped" id="supplierTable">
+                <thead>
+                    <tr>
+                        <th scope="col">ID Supplier</th>
+                        <th scope="col">Nama Supplier</th>
+                        <th scope="col">No. Telepon</th>
+                        <th scope="col">Alamat</th>
+                        <th scope="col">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Data supplier akan ditampilkan di sini -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal Add Supplier -->
+    <div class="modal fade" id="addSupplierModal" tabindex="-1" aria-labelledby="addSupplierModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addSupplierModalLabel">Add New Supplier</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addSupplierForm">
+                        <div class="mb-3">
+                            <label for="newNamaSupplier" class="form-label">Nama Supplier</label>
+                            <input type="text" class="form-control" id="newNamaSupplier" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="newNoTelepon" class="form-label">No. Telepon</label>
+                            <input type="text" class="form-control" id="newNoTelepon" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="newAlamat" class="form-label">Alamat</label>
+                            <textarea class="form-control" id="newAlamat" rows="3" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Add Supplier</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Edit Supplier -->
+    <div class="modal fade" id="editSupplierModal" tabindex="-1" aria-labelledby="editSupplierModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editSupplierModalLabel">Edit Supplier</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editSupplierForm">
+                        <input type="hidden" id="editSupplierId">
+                        <div class="mb-3">
+                            <label for="editNamaSupplier" class="form-label">Nama Supplier</label>
+                            <input type="text" class="form-control" id="editNamaSupplier" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editNoTelepon" class="form-label">No. Telepon</label>
+                            <input type="text" class="form-control" id="editNoTelepon" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editAlamat" class="form-label">Alamat</label>
+                            <textarea class="form-control" id="editAlamat" rows="3" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Update Supplier</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Fungsi untuk menampilkan daftar supplier
+        function displaySuppliers() {
+            const supplierTable = document.getElementById('supplierTable').getElementsByTagName('tbody')[0];
+            const suppliers = JSON.parse(localStorage.getItem('suppliers')) || [];
+
+            supplierTable.innerHTML = ''; // Kosongkan tabel
+            suppliers.forEach(supplier => {
+                const row = supplierTable.insertRow();
+                row.innerHTML = `
+                    <td>${supplier.id}</td>
+                    <td>${supplier.nama}</td>
+                    <td>${supplier.telepon}</td>
+                    <td>${supplier.alamat}</td>
+                    <td>
+                        <button class="btn btn-info btn-sm" onclick="editSupplier('${supplier.id}')"><i class="fas fa-edit"></i> Edit</button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteSupplier('${supplier.id}')"><i class="fas fa-trash-alt"></i> Delete</button>
+                    </td>
+                `;
+            });
+        }
+
+        // Fungsi untuk menambahkan supplier
+        document.getElementById('addSupplierForm').addEventListener('submit', function (event) {
+            event.preventDefault();
+
+            const nama = document.getElementById('newNamaSupplier').value;
+            const telepon = document.getElementById('newNoTelepon').value;
+            const alamat = document.getElementById('newAlamat').value;
+            const supplierId = `SUP-${Date.now()}`;
+            const suppliers = JSON.parse(localStorage.getItem('suppliers')) || [];
+            
+            suppliers.push({ id: supplierId, nama, telepon, alamat });
+            localStorage.setItem('suppliers', JSON.stringify(suppliers));
+
+            displaySuppliers();
+            document.getElementById('addSupplierForm').reset();
+            $('#addSupplierModal').modal('hide');
+        });
+
+        // Fungsi untuk mengedit supplier
+        function editSupplier(id) {
+            const suppliers = JSON.parse(localStorage.getItem('suppliers')) || [];
+            const supplier = suppliers.find(s => s.id === id);
+
+            document.getElementById('editSupplierId').value = supplier.id;
+            document.getElementById('editNamaSupplier').value = supplier.nama;
+            document.getElementById('editNoTelepon').value = supplier.telepon;
+            document.getElementById('editAlamat').value = supplier.alamat;
+
+            $('#editSupplierModal').modal('show');
+        }
+
+        // Fungsi untuk memperbarui supplier
+        document.getElementById('editSupplierForm').addEventListener('submit', function (event) {
+            event.preventDefault();
+
+            const id = document.getElementById('editSupplierId').value;
+            const nama = document.getElementById('editNamaSupplier').value;
+            const telepon = document.getElementById('editNoTelepon').value;
+            const alamat = document.getElementById('editAlamat').value;
+
+            let suppliers = JSON.parse(localStorage.getItem('suppliers')) || [];
+            const supplierIndex = suppliers.findIndex(s => s.id === id);
+
+            suppliers[supplierIndex] = { id, nama, telepon, alamat };
+            localStorage.setItem('suppliers', JSON.stringify(suppliers));
+
+            displaySuppliers();
+            document.getElementById('editSupplierForm').reset();
+            $('#editSupplierModal').modal('hide');
+        });
+
+        // Fungsi untuk menghapus supplier
+        function deleteSupplier(id) {
+            let suppliers = JSON.parse(localStorage.getItem('suppliers')) || [];
+            suppliers = suppliers.filter(supplier => supplier.id !== id);
+            localStorage.setItem('suppliers', JSON.stringify(suppliers));
+
+            displaySuppliers();
+        }
+
+        // Tampilkan data awal
+        displaySuppliers();
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
