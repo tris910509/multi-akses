@@ -19,6 +19,8 @@
         <div class="my-5">
             <h1>Daftar Transaksi</h1>
 
+            <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#tambahTransaksiModal">Tambah Transaksi</button>
+
             <table class="table table-striped" id="transaksiTable">
                 <thead>
                     <tr>
@@ -36,6 +38,43 @@
                     <!-- Data transaksi akan ditampilkan di sini -->
                 </tbody>
             </table>
+        </div>
+    </div>
+
+    <!-- Modal Tambah Transaksi -->
+    <div class="modal fade" id="tambahTransaksiModal" tabindex="-1" aria-labelledby="tambahTransaksiModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="tambahTransaksiModalLabel">Tambah Transaksi</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="transaksiForm">
+                        <div class="mb-3">
+                            <label for="pelangganId" class="form-label">Pilih Pelanggan</label>
+                            <select class="form-select" id="pelangganId" required>
+                                <!-- Daftar pelanggan akan dimasukkan di sini -->
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="produkId" class="form-label">Pilih Produk</label>
+                            <select class="form-select" id="produkId" required>
+                                <!-- Daftar produk akan dimasukkan di sini -->
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="jumlah" class="form-label">Jumlah Produk</label>
+                            <input type="number" class="form-control" id="jumlah" required min="1">
+                        </div>
+                        <div class="mb-3">
+                            <label for="totalHarga" class="form-label">Total Harga</label>
+                            <input type="number" class="form-control" id="totalHarga" readonly>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Tambah Transaksi</button>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -79,24 +118,45 @@
     </div>
 
     <script>
-        // Function to display transaksi data with pelanggan info
+        // Simulasi data pelanggan dan produk
+        const pelangganList = JSON.parse(localStorage.getItem('pelanggan')) || [];
+        const produkList = JSON.parse(localStorage.getItem('produk')) || [];
+
+        // Function to display pelanggan and produk in modal
+        function populateSelectOptions() {
+            const pelangganSelect = document.getElementById('pelangganId');
+            const produkSelect = document.getElementById('produkId');
+
+            pelangganList.forEach(p => {
+                const option = document.createElement('option');
+                option.value = p.id;
+                option.textContent = `${p.nama} (${p.peran})`;
+                pelangganSelect.appendChild(option);
+            });
+
+            produkList.forEach(p => {
+                const option = document.createElement('option');
+                option.value = p.id;
+                option.textContent = `${p.nama} - Stok: ${p.stok}`;
+                produkSelect.appendChild(option);
+            });
+        }
+
+        // Display transaksi
         function displayTransaksi() {
             const transaksiTable = document.getElementById('transaksiTable').getElementsByTagName('tbody')[0];
             const transaksi = JSON.parse(localStorage.getItem('transaksi')) || [];
-            const pelanggan = JSON.parse(localStorage.getItem('pelanggan')) || [];
 
             transaksiTable.innerHTML = '';
             transaksi.forEach(t => {
+                const pelanggan = pelangganList.find(p => p.id === t.pelangganId);
                 const row = transaksiTable.insertRow();
                 
-                // Find the pelanggan based on ID
-                const pelangganData = pelanggan.find(p => p.id === t.pelangganId);
-
                 row.innerHTML = `
                     <td>${t.id}</td>
                     <td>${t.pelangganId}</td>
-                    <td>${pelangganData ? pelangganData.nama : 'Tidak Ditemukan'}</td>
-                    <td>${pelangganData ? pelangganData.peran : 'Tidak Diketahui'}</td>
+                    <td>${pelanggan ? pelanggan.nama : 'Tidak Ditemukan'}</td>
+                    <td>${pelanggan ? pelanggan.peran : 'Tidak Diketahui'}</td>
                     <td>${t.totalHarga}</td>
                     <td>${t.tanggal}</td>
                     <td>${t.statusPembayaran || 'Belum Dibayar'}</td>
@@ -110,19 +170,71 @@
             });
         }
 
-        // Function to open bayar modal
-        function openBayarModal(transaksiId) {
-            const transaksi = JSON.parse(localStorage.getItem('transaksi')) || [];
-            const selectedTransaksi = transaksi.find(t => t.id === transaksiId);
+        // Add new transaksi
+        document.getElementById('transaksiForm').addEventListener('submit', function (e) {
+            e.preventDefault();
 
-            if (selectedTransaksi) {
-                document.getElementById('transaksiId').value = transaksiId;
-                document.getElementById('jumlahBayar').value = selectedTransaksi.totalHarga;
-                document.getElementById('kembalian').value = 0;
-            }
+            const produkId = document.getElementById('produkId').value;
+            const jumlah = document.getElementById('jumlah').value;
+            const produk = produkList.find(p => p.id === produkId);
+            const pelangganId = document.getElementById('pelangganId').value;
+            const pelanggan = pelangganList.find(p => p.id === pelangganId);
+            
+            const totalHarga = produk.harga * jumlah;
+            const transaksi = {
+                id: 'TRX' + new Date().getTime(),
+                pelangganId,
+                produkId,
+                totalHarga,
+                tanggal: new Date().toLocaleDateString(),
+                statusPembayaran: 'Belum Dibayar'
+            };
+
+            // Save transaksi to localStorage
+            const transaksiList = JSON.parse(localStorage.getItem('transaksi')) || [];
+            transaksiList.push(transaksi);
+            localStorage.setItem('transaksi', JSON.stringify(transaksiList));
+
+            // Update stok produk
+            produk.stok -= jumlah;
+            localStorage.setItem('produk', JSON.stringify(produkList));
+
+            displayTransaksi();
+            document.getElementById('transaksiForm').reset();
+            $('#tambahTransaksiModal').modal('hide');
+        });
+
+        // Open bayar modal
+        function openBayarModal(transaksiId) {
+            const transaksiList = JSON.parse(localStorage.getItem('transaksi')) || [];
+            const transaksi = transaksiList.find(t => t.id === transaksiId);
+            const pembayaranSelect = document.getElementById('transaksiId');
+            
+            // Set transaksi ID
+            pembayaranSelect.innerHTML = `<option value="${transaksiId}">${transaksiId}</option>`;
         }
 
-        // Initialize page data
+        // Process payment
+        document.getElementById('pembayaranForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const transaksiId = document.getElementById('transaksiId').value;
+            const jumlahBayar = parseFloat(document.getElementById('jumlahBayar').value);
+            const transaksiList = JSON.parse(localStorage.getItem('transaksi')) || [];
+            const transaksi = transaksiList.find(t => t.id === transaksiId);
+
+            if (jumlahBayar >= transaksi.totalHarga) {
+                transaksi.statusPembayaran = 'Dibayar';
+                localStorage.setItem('transaksi', JSON.stringify(transaksiList));
+                displayTransaksi();
+                $('#bayarModal').modal('hide');
+            } else {
+                alert('Jumlah bayar kurang dari total harga!');
+            }
+        });
+
+        // Initialize page
+        populateSelectOptions();
         displayTransaksi();
     </script>
 
