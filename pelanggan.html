@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pelanggan Management</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet"> <!-- Font Awesome for Icons -->
 </head>
 <body>
     <div class="container">
@@ -17,19 +18,21 @@
 
         <div class="my-5">
             <h1>Pelanggan Management</h1>
-            <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addPelangganModal">Add Pelanggan</button>
+            <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addPelangganModal"><i class="fas fa-user-plus"></i> Add Pelanggan</button>
 
             <table class="table table-striped" id="pelangganTable">
                 <thead>
                     <tr>
+                        <th scope="col">ID</th>
                         <th scope="col">Nama</th>
+                        <th scope="col">Jenis Kelamin</th>
+                        <th scope="col">No Handphone</th>
                         <th scope="col">Alamat</th>
-                        <th scope="col">No. Telp</th>
-                        <th scope="col">Action</th>
+                        <th scope="col">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <!-- Data Pelanggan akan ditambahkan di sini -->
+                    <!-- Data pelanggan akan ditambahkan di sini -->
                 </tbody>
             </table>
         </div>
@@ -50,14 +53,58 @@
                             <input type="text" class="form-control" id="newNama" required>
                         </div>
                         <div class="mb-3">
-                            <label for="newAlamat" class="form-label">Alamat</label>
-                            <input type="text" class="form-control" id="newAlamat" required>
+                            <label for="newJenisKelamin" class="form-label">Jenis Kelamin</label>
+                            <select class="form-select" id="newJenisKelamin">
+                                <option value="Laki-Laki">Laki-Laki</option>
+                                <option value="Perempuan">Perempuan</option>
+                            </select>
                         </div>
                         <div class="mb-3">
-                            <label for="newTelp" class="form-label">No. Telp</label>
-                            <input type="text" class="form-control" id="newTelp" required>
+                            <label for="newNoHandphone" class="form-label">No Handphone</label>
+                            <input type="text" class="form-control" id="newNoHandphone" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="newAlamat" class="form-label">Alamat</label>
+                            <textarea class="form-control" id="newAlamat" required></textarea>
                         </div>
                         <button type="submit" class="btn btn-primary">Add Pelanggan</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Edit Pelanggan -->
+    <div class="modal fade" id="editPelangganModal" tabindex="-1" aria-labelledby="editPelangganModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editPelangganModalLabel">Edit Pelanggan</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editPelangganForm">
+                        <input type="hidden" id="editPelangganId">
+                        <div class="mb-3">
+                            <label for="editNama" class="form-label">Nama</label>
+                            <input type="text" class="form-control" id="editNama" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editJenisKelamin" class="form-label">Jenis Kelamin</label>
+                            <select class="form-select" id="editJenisKelamin">
+                                <option value="Laki-Laki">Laki-Laki</option>
+                                <option value="Perempuan">Perempuan</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editNoHandphone" class="form-label">No Handphone</label>
+                            <input type="text" class="form-control" id="editNoHandphone" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editAlamat" class="form-label">Alamat</label>
+                            <textarea class="form-control" id="editAlamat" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
                     </form>
                 </div>
             </div>
@@ -77,14 +124,17 @@
             const pelanggan = JSON.parse(localStorage.getItem('pelanggan')) || [];
 
             pelangganTable.innerHTML = ''; // Kosongkan tabel
-            pelanggan.forEach((pelanggan, index) => {
+            pelanggan.forEach((pelangganData, index) => {
                 const row = pelangganTable.insertRow();
                 row.innerHTML = `
-                    <td>${pelanggan.nama}</td>
-                    <td>${pelanggan.alamat}</td>
-                    <td>${pelanggan.telp}</td>
+                    <td>${pelangganData.id}</td>
+                    <td>${pelangganData.nama}</td>
+                    <td>${pelangganData.jenisKelamin}</td>
+                    <td>${pelangganData.noHandphone}</td>
+                    <td>${pelangganData.alamat}</td>
                     <td>
-                        <button class="btn btn-danger btn-sm" onclick="deletePelanggan(${index})">Delete</button>
+                        <button class="btn btn-info btn-sm" onclick="editPelanggan(${index})"><i class="fas fa-edit"></i> Edit</button>
+                        <button class="btn btn-danger btn-sm" onclick="deletePelanggan(${index})"><i class="fas fa-trash-alt"></i> Delete</button>
                     </td>
                 `;
             });
@@ -95,11 +145,13 @@
             event.preventDefault();
 
             const nama = document.getElementById('newNama').value;
+            const jenisKelamin = document.getElementById('newJenisKelamin').value;
+            const noHandphone = document.getElementById('newNoHandphone').value;
             const alamat = document.getElementById('newAlamat').value;
-            const telp = document.getElementById('newTelp').value;
 
             const pelanggan = JSON.parse(localStorage.getItem('pelanggan')) || [];
-            pelanggan.push({ nama, alamat, telp });
+            const pelangganId = pelanggan.length ? pelanggan[pelanggan.length - 1].id + 1 : 1; // Generate ID unik
+            pelanggan.push({ id: pelangganId, nama, jenisKelamin, noHandphone, alamat });
             localStorage.setItem('pelanggan', JSON.stringify(pelanggan));
 
             displayPelanggan(); // Update tabel setelah menambah pelanggan
@@ -113,6 +165,42 @@
             localStorage.setItem('pelanggan', JSON.stringify(pelanggan));
             displayPelanggan(); // Update tabel setelah menghapus pelanggan
         }
+
+        // Menampilkan data pelanggan yang akan diedit
+        function editPelanggan(index) {
+            const pelanggan = JSON.parse(localStorage.getItem('pelanggan')) || [];
+            const pelangganData = pelanggan[index];
+
+            // Isi form dengan data pelanggan
+            document.getElementById('editPelangganId').value = pelangganData.id;
+            document.getElementById('editNama').value = pelangganData.nama;
+            document.getElementById('editJenisKelamin').value = pelangganData.jenisKelamin;
+            document.getElementById('editNoHandphone').value = pelangganData.noHandphone;
+            document.getElementById('editAlamat').value = pelangganData.alamat;
+
+            // Tampilkan modal
+            $('#editPelangganModal').modal('show');
+        }
+
+        // Menyimpan perubahan setelah mengedit pelanggan
+        document.getElementById('editPelangganForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const id = document.getElementById('editPelangganId').value;
+            const nama = document.getElementById('editNama').value;
+            const jenisKelamin = document.getElementById('editJenisKelamin').value;
+            const noHandphone = document.getElementById('editNoHandphone').value;
+            const alamat = document.getElementById('editAlamat').value;
+
+            const pelanggan = JSON.parse(localStorage.getItem('pelanggan')) || [];
+            const pelangganIndex = pelanggan.findIndex(p => p.id == id);
+            pelanggan[pelangganIndex] = { id, nama, jenisKelamin, noHandphone, alamat }; // Update data pelanggan
+
+            localStorage.setItem('pelanggan', JSON.stringify(pelanggan));
+            displayPelanggan(); // Update tabel setelah edit
+
+            $('#editPelangganModal').modal('hide'); // Menutup modal
+        });
 
         // Tampilkan daftar pelanggan saat halaman dimuat
         displayPelanggan();
